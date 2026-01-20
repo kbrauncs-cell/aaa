@@ -87,24 +87,6 @@ player addAction ["Open Crate Spawner", {
     _map ctrlAddEventHandler ["Draw", {
         params ["_control"];
 
-        _mousePos = _control getMousePosition;
-        _hoveredFactory = -1;
-        if (count _mousePos == 2) then {
-            {
-                _factoryScreenPos = _control ctrlMapWorldToScreen _x;
-                if (count _factoryScreenPos > 0) then {
-                    _factoryX = _factoryScreenPos select 0;
-                    _factoryY = _factoryScreenPos select 1;
-                    _mouseX = _mousePos select 0;
-                    _mouseY = _mousePos select 1;
-                    _screenDist = sqrt (((_factoryX - _mouseX) ^ 2) + ((_factoryY - _mouseY) ^ 2));
-                    if (_screenDist < 0.08) then {
-                        _hoveredFactory = _forEachIndex;
-                    };
-                };
-            } forEach CRATE_FACTORY_POSITIONS;
-        };
-
         if (count CRATE_PENDING_LOCATION > 0) then {
             _control drawIcon ["\a3\ui_f\data\map\markers\military\circle_CA.paa",[1, 1, 0, 0.7],CRATE_PENDING_LOCATION,40,40,0,"SPAWN",1,0.05,"PuristaMedium","center"];
         };
@@ -120,7 +102,7 @@ player addAction ["Open Crate Spawner", {
             };
             _control drawIcon ["\a3\ui_f\data\map\markers\nato\b_installation.paa",_color,_x,35,35,0,format ["F%1", _forEachIndex + 1],1,0.05,"PuristaMedium","right"];
 
-            if (_forEachIndex == _hoveredFactory) then {
+            if (true) then {
                 _morale = CRATE_FACTORY_MORALE select _forEachIndex;
                 _moraleText = "Good";
                 _moraleColor = [0, 1, 0, 1];
@@ -284,9 +266,13 @@ player addAction ["Open Crate Spawner", {
         _comboFactoryType = _display displayCtrl 1024;
         _factoryType = _comboFactoryType lbData (lbCurSel _comboFactoryType);
 
+        _canSpawn = false;
+
         if (_factoryType == "Town") then {
             _townCount = {_x == "Town"} count CRATE_FACTORY_TYPES;
-            if (_townCount > 0) then {
+            if (_townCount == 0) then {
+                _canSpawn = true;
+            } else {
                 _woodCost = 2 + (2 * _townCount);
                 _metalCost = 0;
                 if (_townCount >= 2) then {_metalCost = 1 + floor(_townCount / 2)};
@@ -298,6 +284,7 @@ player addAction ["Open Crate Spawner", {
                 if (_metalCost > 0) then {
                     for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetalCrates select _i)};
                 };
+                _canSpawn = true;
             };
         };
 
@@ -317,6 +304,7 @@ player addAction ["Open Crate Spawner", {
             for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFoodCrates select _i)};
             for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWaterCrates select _i)};
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
+            _canSpawn = true;
         };
 
         if (_factoryType == "Powerplant") then {
@@ -333,6 +321,7 @@ player addAction ["Open Crate Spawner", {
             for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoalCrates select _i)};
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetalCrates select _i)};
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
+            _canSpawn = true;
         };
 
         if (_factoryType == "Vehicle") then {
@@ -349,6 +338,7 @@ player addAction ["Open Crate Spawner", {
             for "_i" from 0 to (_energyCost - 1) do {deleteVehicle (_nearEnergyCrates select _i)};
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetalCrates select _i)};
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
+            _canSpawn = true;
         };
 
         if (_factoryType == "Pier") then {
@@ -365,7 +355,10 @@ player addAction ["Open Crate Spawner", {
             for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFoodCrates select _i)};
             for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWaterCrates select _i)};
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
+            _canSpawn = true;
         };
+
+        if (!_canSpawn) exitWith {systemChat "Cannot spawn factory - validation failed!"};
 
         _spawnInterval = 60;
         if (_factoryType == "Town") then {
