@@ -1,4 +1,4 @@
-// Timed Crate Spawner GUI - v5 TASK SYSTEM - Hover Info + Task Objectives
+// Factory Manager - v6 FIXED - Task Tracking + Hover Info + Morale System
 player addAction ["Open Crate Spawner", {
     createDialog "RscDisplayEmpty";
     _display = findDisplay -1;
@@ -43,9 +43,10 @@ player addAction ["Open Crate Spawner", {
     if (isNil "CRATE_FACTORY_MORALE") then {CRATE_FACTORY_MORALE = []};
     if (isNil "CRATE_FACTORY_TASK_PENDING") then {CRATE_FACTORY_TASK_PENDING = []};
     if (isNil "CRATE_FACTORY_TASK_TYPE") then {CRATE_FACTORY_TASK_TYPE = []};
-    if (isNil "CRATE_FACTORY_TASK_OBJECTS") then {CRATE_FACTORY_TASK_OBJECTS = []};
+    if (isNil "CRATE_FACTORY_TASK_ID") then {CRATE_FACTORY_TASK_ID = []};
     if (isNil "CRATE_FACTORY_TASK_TIMER") then {CRATE_FACTORY_TASK_TIMER = []};
     if (isNil "CRATE_HOVERED_FACTORY") then {CRATE_HOVERED_FACTORY = -1};
+    if (isNil "CRATE_FACTORY_OPFOR_SPAWNED") then {CRATE_FACTORY_OPFOR_SPAWNED = []};
 
     _map ctrlAddEventHandler ["MouseMoving", {
         params ["_control", "_xPos", "_yPos"];
@@ -104,12 +105,10 @@ player addAction ["Open Crate Spawner", {
 
                 _taskPending = CRATE_FACTORY_TASK_PENDING select _forEachIndex;
                 _taskType = CRATE_FACTORY_TASK_TYPE select _forEachIndex;
-                _taskObjects = CRATE_FACTORY_TASK_OBJECTS select _forEachIndex;
-                _aliveObjects = _taskObjects select {alive _x};
 
                 _taskText = "";
                 if (_taskPending) then {
-                    _taskText = format ["\nTask: %1 (%2/%3)", _taskType, count _aliveObjects, count _taskObjects];
+                    _taskText = format ["\nTask: %1", _taskType];
                 };
 
                 _food = CRATE_FACTORY_FOOD select _forEachIndex;
@@ -161,16 +160,16 @@ player addAction ["Open Crate Spawner", {
 
     _comboFactoryType = _display ctrlCreate ["RscCombo", 1024];
     _comboFactoryType ctrlSetPosition [0.68, 0.225, 0.30, 0.035];
-    _comboFactoryType lbAdd "Mineral Factory";
-    _comboFactoryType lbSetData [0, "Mineral"];
     _comboFactoryType lbAdd "Town Factory";
-    _comboFactoryType lbSetData [1, "Town"];
-    _comboFactoryType lbAdd "Powerplant Factory";
-    _comboFactoryType lbSetData [2, "Powerplant"];
-    _comboFactoryType lbAdd "Vehicle Factory";
-    _comboFactoryType lbSetData [3, "Vehicle"];
+    _comboFactoryType lbSetData [0, "Town"];
+    _comboFactoryType lbAdd "Mineral Factory";
+    _comboFactoryType lbSetData [1, "Mineral"];
     _comboFactoryType lbAdd "Pier Factory";
-    _comboFactoryType lbSetData [4, "Pier"];
+    _comboFactoryType lbSetData [2, "Pier"];
+    _comboFactoryType lbAdd "Powerplant Factory";
+    _comboFactoryType lbSetData [3, "Powerplant"];
+    _comboFactoryType lbAdd "Vehicle Factory";
+    _comboFactoryType lbSetData [4, "Vehicle"];
     _comboFactoryType lbSetCurSel 0;
     _comboFactoryType ctrlSetBackgroundColor [0.1, 0.1, 0.1, 1];
     _comboFactoryType ctrlSetFontHeight 0.03;
@@ -189,64 +188,59 @@ player addAction ["Open Crate Spawner", {
             _labelCost ctrlSetStructuredText parseText "<t size='1.0'>Click map first</t>";
         };
         _factoryType = _ctrl lbData (lbCurSel _ctrl);
+        _costText = "";
 
         if (_factoryType == "Town") then {
             _townCount = {_x == "Town"} count CRATE_FACTORY_TYPES;
             if (_townCount == 0) then {
-                _labelCost ctrlSetStructuredText parseText "<t size='1.0' color='#0f0'>FREE!</t>";
+                _costText = "<t size='1.0' color='#0f0'>FREE!</t>";
             } else {
-                _houseCount = count (nearestObjects [CRATE_PENDING_LOCATION, ["House"], 400]);
-                _foodCost = 2 * _townCount;
-                _waterCost = 3 * _townCount;
+                _woodCost = 2 + (2 * _townCount);
                 _metalCost = 0;
-                _houseCostMultiplier = 1 + ((_houseCount / 10) * 0.1);
-                _foodCost = ceil (_foodCost * _houseCostMultiplier);
-                _waterCost = ceil (_waterCost * _houseCostMultiplier);
-                if (_houseCount >= 100) then {_metalCost = 2 + floor(_houseCount / 50)};
+                if (_townCount >= 2) then {_metalCost = 1 + floor(_townCount / 2)};
                 if (_metalCost > 0) then {
-                    _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Metal<br/><t size='0.8' color='#888'>Houses:%4</t></t>", _foodCost, _waterCost, _metalCost, _houseCount];
+                    _costText = format ["<t size='0.9'>Cost:<br/>%1x Wood<br/>%2x Metal</t>", _woodCost, _metalCost];
                 } else {
-                    _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/><t size='0.8' color='#888'>Houses:%3</t></t>", _foodCost, _waterCost, _houseCount];
-                };
-                _labelCost ctrlSetStructuredText parseText _costText;
-            };
-        } else {
-            if (_factoryType == "Mineral") then {
-                _mineralCount = {_x == "Mineral"} count CRATE_FACTORY_TYPES;
-                _foodCost = 5 + (5 * _mineralCount);
-                _waterCost = 5 + (5 * _mineralCount);
-                _woodCost = 5 + (5 * _mineralCount);
-                _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Wood</t>", _foodCost, _waterCost, _woodCost];
-                _labelCost ctrlSetStructuredText parseText _costText;
-            } else {
-                if (_factoryType == "Powerplant") then {
-                    _powerCount = {_x == "Powerplant"} count CRATE_FACTORY_TYPES;
-                    _coalCost = 4 + (4 * _powerCount);
-                    _metalCost = 3 + (3 * _powerCount);
-                    _costText = format ["<t size='0.9'>Cost:<br/>%1x Coal<br/>%2x Metal</t>", _coalCost, _metalCost];
-                    _labelCost ctrlSetStructuredText parseText _costText;
-                } else {
-                    if (_factoryType == "Vehicle") then {
-                        _vehicleCount = {_x == "Vehicle"} count CRATE_FACTORY_TYPES;
-                        _energyCost = 5 + (5 * _vehicleCount);
-                        _metalCost = 5 + (5 * _vehicleCount);
-                        _costText = format ["<t size='0.9'>Cost:<br/>%1x Energy<br/>%2x Metal</t>", _energyCost, _metalCost];
-                        _labelCost ctrlSetStructuredText parseText _costText;
-                    } else {
-                        if (_factoryType == "Pier") then {
-                            _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
-                            _foodCost = 3 + (3 * _pierCount);
-                            _waterCost = 5 + (5 * _pierCount);
-                            _woodCost = 7 + (7 * _pierCount);
-                            _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Wood</t>", _foodCost, _waterCost, _woodCost];
-                            _labelCost ctrlSetStructuredText parseText _costText;
-                        } else {
-                            _labelCost ctrlSetStructuredText parseText "<t size='1.0' color='#0f0'>FREE</t>";
-                        };
-                    };
+                    _costText = format ["<t size='0.9'>Cost:<br/>%1x Wood</t>", _woodCost];
                 };
             };
         };
+
+        if (_factoryType == "Mineral") then {
+            _mineralCount = {_x == "Mineral"} count CRATE_FACTORY_TYPES;
+            _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
+            _pierMultiplier = 1 + (_pierCount * 0.5);
+            _foodCost = ceil((3 + (3 * _mineralCount)) * _pierMultiplier);
+            _waterCost = ceil((4 + (4 * _mineralCount)) * _pierMultiplier);
+            _woodCost = ceil((5 + (5 * _mineralCount)) * _pierMultiplier);
+            _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Wood</t>", _foodCost, _waterCost, _woodCost];
+        };
+
+        if (_factoryType == "Pier") then {
+            _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
+            _foodCost = 5 + (5 * _pierCount);
+            _waterCost = 6 + (6 * _pierCount);
+            _woodCost = 8 + (8 * _pierCount);
+            _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Wood</t>", _foodCost, _waterCost, _woodCost];
+        };
+
+        if (_factoryType == "Powerplant") then {
+            _powerCount = {_x == "Powerplant"} count CRATE_FACTORY_TYPES;
+            _coalCost = 6 + (6 * _powerCount);
+            _metalCost = 5 + (5 * _powerCount);
+            _woodCost = 4 + (4 * _powerCount);
+            _costText = format ["<t size='0.9'>Cost:<br/>%1x Coal<br/>%2x Metal<br/>%3x Wood</t>", _coalCost, _metalCost, _woodCost];
+        };
+
+        if (_factoryType == "Vehicle") then {
+            _vehicleCount = {_x == "Vehicle"} count CRATE_FACTORY_TYPES;
+            _energyCost = 8 + (8 * _vehicleCount);
+            _metalCost = 10 + (10 * _vehicleCount);
+            _woodCost = 6 + (6 * _vehicleCount);
+            _costText = format ["<t size='0.9'>Cost:<br/>%1x Energy<br/>%2x Metal<br/>%3x Wood</t>", _energyCost, _metalCost, _woodCost];
+        };
+
+        _labelCost ctrlSetStructuredText parseText _costText;
     }];
 
     _btnSpawnFactory = _display ctrlCreate ["RscButton", 1025];
@@ -268,22 +262,14 @@ player addAction ["Open Crate Spawner", {
         if (_factoryType == "Town") then {
             _townCount = {_x == "Town"} count CRATE_FACTORY_TYPES;
             if (_townCount > 0) then {
-                _houseCount = count (nearestObjects [CRATE_PENDING_LOCATION, ["House"], 400]);
-                _foodCost = 2 * _townCount;
-                _waterCost = 3 * _townCount;
+                _woodCost = 2 + (2 * _townCount);
                 _metalCost = 0;
-                _houseCostMultiplier = 1 + ((_houseCount / 10) * 0.1);
-                _foodCost = ceil (_foodCost * _houseCostMultiplier);
-                _waterCost = ceil (_waterCost * _houseCostMultiplier);
-                if (_houseCount >= 100) then {_metalCost = 2 + floor(_houseCount / 50)};
-                _nearFoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
-                _nearWaterCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
+                if (_townCount >= 2) then {_metalCost = 1 + floor(_townCount / 2)};
+                _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
                 _nearMetalCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
-                if (count _nearFoodCrates < _foodCost) exitWith {systemChat format ["Need %1x Food! (Found:%2)", _foodCost, count _nearFoodCrates]};
-                if (count _nearWaterCrates < _waterCost) exitWith {systemChat format ["Need %1x Water! (Found:%2)", _waterCost, count _nearWaterCrates]};
+                if (count _nearWoodCrates < _woodCost) exitWith {systemChat format ["Need %1x Wood! (Found:%2)", _woodCost, count _nearWoodCrates]};
                 if (_metalCost > 0 && count _nearMetalCrates < _metalCost) exitWith {systemChat format ["Need %1x Metal! (Found:%2)", _metalCost, count _nearMetalCrates]};
-                for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFoodCrates select _i)};
-                for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWaterCrates select _i)};
+                for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
                 if (_metalCost > 0) then {
                     for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetalCrates select _i)};
                 };
@@ -292,9 +278,11 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Mineral") then {
             _mineralCount = {_x == "Mineral"} count CRATE_FACTORY_TYPES;
-            _foodCost = 5 + (5 * _mineralCount);
-            _waterCost = 5 + (5 * _mineralCount);
-            _woodCost = 5 + (5 * _mineralCount);
+            _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
+            _pierMultiplier = 1 + (_pierCount * 0.5);
+            _foodCost = ceil((3 + (3 * _mineralCount)) * _pierMultiplier);
+            _waterCost = ceil((4 + (4 * _mineralCount)) * _pierMultiplier);
+            _woodCost = ceil((5 + (5 * _mineralCount)) * _pierMultiplier);
             _nearFoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
             _nearWaterCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
@@ -308,33 +296,41 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Powerplant") then {
             _powerCount = {_x == "Powerplant"} count CRATE_FACTORY_TYPES;
-            _coalCost = 4 + (4 * _powerCount);
-            _metalCost = 3 + (3 * _powerCount);
+            _coalCost = 6 + (6 * _powerCount);
+            _metalCost = 5 + (5 * _powerCount);
+            _woodCost = 4 + (4 * _powerCount);
             _nearCoalCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_closed_F"], 100];
             _nearMetalCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
+            _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
             if (count _nearCoalCrates < _coalCost) exitWith {systemChat format ["Need %1x Coal! (Found:%2)", _coalCost, count _nearCoalCrates]};
             if (count _nearMetalCrates < _metalCost) exitWith {systemChat format ["Need %1x Metal! (Found:%2)", _metalCost, count _nearMetalCrates]};
+            if (count _nearWoodCrates < _woodCost) exitWith {systemChat format ["Need %1x Wood! (Found:%2)", _woodCost, count _nearWoodCrates]};
             for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoalCrates select _i)};
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetalCrates select _i)};
+            for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
         };
 
         if (_factoryType == "Vehicle") then {
             _vehicleCount = {_x == "Vehicle"} count CRATE_FACTORY_TYPES;
-            _energyCost = 5 + (5 * _vehicleCount);
-            _metalCost = 5 + (5 * _vehicleCount);
+            _energyCost = 8 + (8 * _vehicleCount);
+            _metalCost = 10 + (10 * _vehicleCount);
+            _woodCost = 6 + (6 * _vehicleCount);
             _nearEnergyCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PortableServer_01_sand_F"], 100];
             _nearMetalCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
+            _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
             if (count _nearEnergyCrates < _energyCost) exitWith {systemChat format ["Need %1x Energy! (Found:%2)", _energyCost, count _nearEnergyCrates]};
             if (count _nearMetalCrates < _metalCost) exitWith {systemChat format ["Need %1x Metal! (Found:%2)", _metalCost, count _nearMetalCrates]};
+            if (count _nearWoodCrates < _woodCost) exitWith {systemChat format ["Need %1x Wood! (Found:%2)", _woodCost, count _nearWoodCrates]};
             for "_i" from 0 to (_energyCost - 1) do {deleteVehicle (_nearEnergyCrates select _i)};
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetalCrates select _i)};
+            for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
         };
 
         if (_factoryType == "Pier") then {
             _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
-            _foodCost = 3 + (3 * _pierCount);
-            _waterCost = 5 + (5 * _pierCount);
-            _woodCost = 7 + (7 * _pierCount);
+            _foodCost = 5 + (5 * _pierCount);
+            _waterCost = 6 + (6 * _pierCount);
+            _woodCost = 8 + (8 * _pierCount);
             _nearFoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
             _nearWaterCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
@@ -380,8 +376,9 @@ player addAction ["Open Crate Spawner", {
         CRATE_FACTORY_MORALE pushBack 100;
         CRATE_FACTORY_TASK_PENDING pushBack false;
         CRATE_FACTORY_TASK_TYPE pushBack "";
-        CRATE_FACTORY_TASK_OBJECTS pushBack [];
+        CRATE_FACTORY_TASK_ID pushBack "";
         CRATE_FACTORY_TASK_TIMER pushBack (3600 + random 18000);
+        CRATE_FACTORY_OPFOR_SPAWNED pushBack false;
 
         CRATE_SELECTED_FACTORY = (count CRATE_FACTORY_POSITIONS) - 1;
         CRATE_PENDING_LOCATION = [];
@@ -586,43 +583,64 @@ player addAction ["Open Crate Spawner", {
                     if (_taskTimer <= 0) then {
                         _isCivilian = (random 1 < 0.75);
                         _taskType = if (_isCivilian) then {"Civilian"} else {"Military"};
+                        _allTasks = call BIS_fnc_taskChildren;
+                        _nearbyTasks = [];
+                        {
+                            _taskPos = [_x] call BIS_fnc_taskDestination;
+                            if (!isNil "_taskPos" && {_taskPos distance2D _factoryPos < 400}) then {
+                                _nearbyTasks pushBack _x;
+                            };
+                        } forEach _allTasks;
 
-                        _nearUnits = [];
-                        if (_isCivilian) then {
-                            _nearUnits = (nearestObjects [_factoryPos, ["Man"], 400]) select {side _x == civilian && alive _x};
-                        } else {
-                            _nearUnits = (nearestObjects [_factoryPos, ["Man"], 400]) select {(side _x == east || side _x == independent) && alive _x};
-                        };
-
-                        if (count _nearUnits > 0) then {
+                        if (count _nearbyTasks > 0) then {
+                            _selectedTask = selectRandom _nearbyTasks;
                             CRATE_FACTORY_TASK_PENDING set [_factoryIndex, true];
                             CRATE_FACTORY_TASK_TYPE set [_factoryIndex, _taskType];
-                            CRATE_FACTORY_TASK_OBJECTS set [_factoryIndex, _nearUnits];
-                            systemChat format ["Factory %1: %2 task created! Eliminate %3 targets.", _factoryIndex + 1, _taskType, count _nearUnits];
+                            CRATE_FACTORY_TASK_ID set [_factoryIndex, _selectedTask];
+                            systemChat format ["Factory %1: %2 task detected nearby!", _factoryIndex + 1, _taskType];
                         };
                         CRATE_FACTORY_TASK_TIMER set [_factoryIndex, (3600 + random 18000)];
                     };
                 };
 
                 if (_hasTask) then {
-                    _taskObjects = CRATE_FACTORY_TASK_OBJECTS select _factoryIndex;
-                    _aliveObjects = _taskObjects select {alive _x};
-                    if (count _aliveObjects == 0) then {
+                    _taskID = CRATE_FACTORY_TASK_ID select _factoryIndex;
+                    _taskState = [_taskID] call BIS_fnc_taskState;
+                    if (_taskState == "SUCCEEDED" || _taskState == "FAILED" || _taskState == "CANCELED") then {
                         CRATE_FACTORY_TASK_PENDING set [_factoryIndex, false];
                         CRATE_FACTORY_TASK_TYPE set [_factoryIndex, ""];
-                        CRATE_FACTORY_TASK_OBJECTS set [_factoryIndex, []];
-                        CRATE_FACTORY_MORALE set [_factoryIndex, 100];
+                        CRATE_FACTORY_TASK_ID set [_factoryIndex, ""];
+                        _currentMorale = CRATE_FACTORY_MORALE select _factoryIndex;
+                        _newMorale = (_currentMorale + 2) min 100;
+                        CRATE_FACTORY_MORALE set [_factoryIndex, _newMorale];
                         CRATE_FACTORY_TASK_TIMER set [_factoryIndex, (3600 + random 18000)];
 
                         _fires = CRATE_FACTORY_FIRES select _factoryIndex;
                         {deleteVehicle _x} forEach _fires;
                         CRATE_FACTORY_FIRES set [_factoryIndex, []];
+                        CRATE_FACTORY_OPFOR_SPAWNED set [_factoryIndex, false];
 
-                        systemChat format ["Factory %1: Task complete! Morale restored.", _factoryIndex + 1];
+                        systemChat format ["Factory %1: Task complete! Morale improving.", _factoryIndex + 1];
                     } else {
                         _currentMorale = CRATE_FACTORY_MORALE select _factoryIndex;
-                        _newMorale = (_currentMorale - 0.5) max 0;
+                        _newMorale = (_currentMorale - 0.1) max 0;
                         CRATE_FACTORY_MORALE set [_factoryIndex, _newMorale];
+
+                        if (_newMorale < 40 && _newMorale >= 30) then {
+                            _opforSpawned = CRATE_FACTORY_OPFOR_SPAWNED select _factoryIndex;
+                            if (!_opforSpawned && random 1 < 0.3) then {
+                                _spawnCount = 2 + floor(random 4);
+                                for "_i" from 1 to _spawnCount do {
+                                    _randomOffset = [random 30 - 15, random 30 - 15, 0];
+                                    _spawnPos = _factoryPos vectorAdd _randomOffset;
+                                    _grp = createGroup east;
+                                    _unit = _grp createUnit ["O_Soldier_F", _spawnPos, [], 0, "NONE"];
+                                };
+                                CRATE_FACTORY_OPFOR_SPAWNED set [_factoryIndex, true];
+                                systemChat format ["Factory %1: OPFOR units spotted nearby!", _factoryIndex + 1];
+                            };
+                        };
+
                         if (_newMorale <= 30) then {
                             _fires = CRATE_FACTORY_FIRES select _factoryIndex;
                             if (count _fires == 0) then {
@@ -897,8 +915,9 @@ player addAction ["Open Crate Spawner", {
         CRATE_FACTORY_MORALE deleteAt _selectedIndex;
         CRATE_FACTORY_TASK_PENDING deleteAt _selectedIndex;
         CRATE_FACTORY_TASK_TYPE deleteAt _selectedIndex;
-        CRATE_FACTORY_TASK_OBJECTS deleteAt _selectedIndex;
+        CRATE_FACTORY_TASK_ID deleteAt _selectedIndex;
         CRATE_FACTORY_TASK_TIMER deleteAt _selectedIndex;
+        CRATE_FACTORY_OPFOR_SPAWNED deleteAt _selectedIndex;
         CRATE_SELECTED_FACTORY = -1;
         systemChat "Factory deleted!";
     }];
@@ -983,8 +1002,9 @@ player addAction ["Open Crate Spawner", {
         CRATE_FACTORY_MORALE = [];
         CRATE_FACTORY_TASK_PENDING = [];
         CRATE_FACTORY_TASK_TYPE = [];
-        CRATE_FACTORY_TASK_OBJECTS = [];
+        CRATE_FACTORY_TASK_ID = [];
         CRATE_FACTORY_TASK_TIMER = [];
+        CRATE_FACTORY_OPFOR_SPAWNED = [];
         CRATE_SELECTED_FACTORY = -1;
         CRATE_HOVERED_FACTORY = -1;
         systemChat "All cleared!";
@@ -1101,63 +1121,59 @@ player addAction ["Open Crate Spawner", {
                 if (count CRATE_PENDING_LOCATION > 0) then {
                     _comboFactoryType = _display displayCtrl 1024;
                     _factoryType = _comboFactoryType lbData (lbCurSel _comboFactoryType);
+                    _costText = "";
+
                     if (_factoryType == "Town") then {
                         _townCount = {_x == "Town"} count CRATE_FACTORY_TYPES;
                         if (_townCount == 0) then {
-                            _labelCost ctrlSetStructuredText parseText "<t size='1.0' color='#0f0'>FREE!</t>";
+                            _costText = "<t size='1.0' color='#0f0'>FREE!</t>";
                         } else {
-                            _houseCount = count (nearestObjects [CRATE_PENDING_LOCATION, ["House"], 400]);
-                            _foodCost = 2 * _townCount;
-                            _waterCost = 3 * _townCount;
+                            _woodCost = 2 + (2 * _townCount);
                             _metalCost = 0;
-                            _houseCostMultiplier = 1 + ((_houseCount / 10) * 0.1);
-                            _foodCost = ceil (_foodCost * _houseCostMultiplier);
-                            _waterCost = ceil (_waterCost * _houseCostMultiplier);
-                            if (_houseCount >= 100) then {_metalCost = 2 + floor(_houseCount / 50)};
+                            if (_townCount >= 2) then {_metalCost = 1 + floor(_townCount / 2)};
                             if (_metalCost > 0) then {
-                                _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Metal<br/><t size='0.8' color='#888'>Houses: %4</t></t>", _foodCost, _waterCost, _metalCost, _houseCount];
+                                _costText = format ["<t size='0.9'>Cost:<br/>%1x Wood<br/>%2x Metal</t>", _woodCost, _metalCost];
                             } else {
-                                _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/><t size='0.8' color='#888'>Houses: %3</t></t>", _foodCost, _waterCost, _houseCount];
-                            };
-                            _labelCost ctrlSetStructuredText parseText _costText;
-                        };
-                    } else {
-                        if (_factoryType == "Mineral") then {
-                            _mineralCount = {_x == "Mineral"} count CRATE_FACTORY_TYPES;
-                            _foodCost = 5 + (5 * _mineralCount);
-                            _waterCost = 5 + (5 * _mineralCount);
-                            _woodCost = 5 + (5 * _mineralCount);
-                            _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Wood</t>", _foodCost, _waterCost, _woodCost];
-                            _labelCost ctrlSetStructuredText parseText _costText;
-                        } else {
-                            if (_factoryType == "Powerplant") then {
-                                _powerCount = {_x == "Powerplant"} count CRATE_FACTORY_TYPES;
-                                _coalCost = 4 + (4 * _powerCount);
-                                _metalCost = 3 + (3 * _powerCount);
-                                _costText = format ["<t size='0.9'>Cost:<br/>%1x Coal<br/>%2x Metal</t>", _coalCost, _metalCost];
-                                _labelCost ctrlSetStructuredText parseText _costText;
-                            } else {
-                                if (_factoryType == "Vehicle") then {
-                                    _vehicleCount = {_x == "Vehicle"} count CRATE_FACTORY_TYPES;
-                                    _energyCost = 5 + (5 * _vehicleCount);
-                                    _metalCost = 5 + (5 * _vehicleCount);
-                                    _costText = format ["<t size='0.9'>Cost:<br/>%1x Energy<br/>%2x Metal</t>", _energyCost, _metalCost];
-                                    _labelCost ctrlSetStructuredText parseText _costText;
-                                } else {
-                                    if (_factoryType == "Pier") then {
-                                        _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
-                                        _foodCost = 3 + (3 * _pierCount);
-                                        _waterCost = 5 + (5 * _pierCount);
-                                        _woodCost = 7 + (7 * _pierCount);
-                                        _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Wood</t>", _foodCost, _waterCost, _woodCost];
-                                        _labelCost ctrlSetStructuredText parseText _costText;
-                                    } else {
-                                        _labelCost ctrlSetStructuredText parseText "<t size='1.0' color='#0f0'>FREE</t>";
-                                    };
-                                };
+                                _costText = format ["<t size='0.9'>Cost:<br/>%1x Wood</t>", _woodCost];
                             };
                         };
                     };
+
+                    if (_factoryType == "Mineral") then {
+                        _mineralCount = {_x == "Mineral"} count CRATE_FACTORY_TYPES;
+                        _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
+                        _pierMultiplier = 1 + (_pierCount * 0.5);
+                        _foodCost = ceil((3 + (3 * _mineralCount)) * _pierMultiplier);
+                        _waterCost = ceil((4 + (4 * _mineralCount)) * _pierMultiplier);
+                        _woodCost = ceil((5 + (5 * _mineralCount)) * _pierMultiplier);
+                        _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Wood</t>", _foodCost, _waterCost, _woodCost];
+                    };
+
+                    if (_factoryType == "Pier") then {
+                        _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
+                        _foodCost = 5 + (5 * _pierCount);
+                        _waterCost = 6 + (6 * _pierCount);
+                        _woodCost = 8 + (8 * _pierCount);
+                        _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Wood</t>", _foodCost, _waterCost, _woodCost];
+                    };
+
+                    if (_factoryType == "Powerplant") then {
+                        _powerCount = {_x == "Powerplant"} count CRATE_FACTORY_TYPES;
+                        _coalCost = 6 + (6 * _powerCount);
+                        _metalCost = 5 + (5 * _powerCount);
+                        _woodCost = 4 + (4 * _powerCount);
+                        _costText = format ["<t size='0.9'>Cost:<br/>%1x Coal<br/>%2x Metal<br/>%3x Wood</t>", _coalCost, _metalCost, _woodCost];
+                    };
+
+                    if (_factoryType == "Vehicle") then {
+                        _vehicleCount = {_x == "Vehicle"} count CRATE_FACTORY_TYPES;
+                        _energyCost = 8 + (8 * _vehicleCount);
+                        _metalCost = 10 + (10 * _vehicleCount);
+                        _woodCost = 6 + (6 * _vehicleCount);
+                        _costText = format ["<t size='0.9'>Cost:<br/>%1x Energy<br/>%2x Metal<br/>%3x Wood</t>", _energyCost, _metalCost, _woodCost];
+                    };
+
+                    _labelCost ctrlSetStructuredText parseText _costText;
                 } else {
                     _labelCost ctrlSetStructuredText parseText "";
                 };
