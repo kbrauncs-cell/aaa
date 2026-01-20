@@ -59,7 +59,7 @@ player addAction ["Open Crate Spawner", {
                 _factoryX = _factoryScreenPos select 0;
                 _factoryY = _factoryScreenPos select 1;
                 _dist = sqrt (((_factoryX - _xPos) ^ 2) + ((_factoryY - _yPos) ^ 2));
-                if (_dist < 0.15) then {
+                if (_dist < 0.075) then {
                     _hoveredFactory = _forEachIndex;
                 };
             };
@@ -269,11 +269,13 @@ player addAction ["Open Crate Spawner", {
         _factoryType = _comboFactoryType lbData (lbCurSel _comboFactoryType);
 
         _canSpawn = false;
+        _costMessage = "";
 
         if (_factoryType == "Town") then {
             _townCount = {_x == "Town"} count CRATE_FACTORY_TYPES;
             if (_townCount == 0) then {
                 _canSpawn = true;
+                _costMessage = "Cost: FREE (First town factory)";
             } else {
                 _woodCost = 2 + (2 * _townCount);
                 _metalCost = 0;
@@ -285,6 +287,9 @@ player addAction ["Open Crate Spawner", {
                 for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
                 if (_metalCost > 0) then {
                     for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetalCrates select _i)};
+                    _costMessage = format ["Cost: %1x Wood + %2x Metal", _woodCost, _metalCost];
+                } else {
+                    _costMessage = format ["Cost: %1x Wood", _woodCost];
                 };
                 _canSpawn = true;
             };
@@ -306,6 +311,7 @@ player addAction ["Open Crate Spawner", {
             for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFoodCrates select _i)};
             for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWaterCrates select _i)};
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
+            _costMessage = format ["Cost: %1x Food + %2x Water + %3x Wood", _foodCost, _waterCost, _woodCost];
             _canSpawn = true;
         };
 
@@ -323,6 +329,7 @@ player addAction ["Open Crate Spawner", {
             for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoalCrates select _i)};
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetalCrates select _i)};
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
+            _costMessage = format ["Cost: %1x Coal + %2x Metal + %3x Wood", _coalCost, _metalCost, _woodCost];
             _canSpawn = true;
         };
 
@@ -340,6 +347,7 @@ player addAction ["Open Crate Spawner", {
             for "_i" from 0 to (_energyCost - 1) do {deleteVehicle (_nearEnergyCrates select _i)};
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetalCrates select _i)};
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
+            _costMessage = format ["Cost: %1x Energy + %2x Metal + %3x Wood", _energyCost, _metalCost, _woodCost];
             _canSpawn = true;
         };
 
@@ -357,6 +365,7 @@ player addAction ["Open Crate Spawner", {
             for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFoodCrates select _i)};
             for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWaterCrates select _i)};
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
+            _costMessage = format ["Cost: %1x Food + %2x Water + %3x Wood", _foodCost, _waterCost, _woodCost];
             _canSpawn = true;
         };
 
@@ -403,7 +412,7 @@ player addAction ["Open Crate Spawner", {
         CRATE_SELECTED_FACTORY = (count CRATE_FACTORY_POSITIONS) - 1;
         CRATE_PENDING_LOCATION = [];
 
-        systemChat format ["Factory %1 spawned!", CRATE_SELECTED_FACTORY + 1];
+        systemChat format ["%1 Factory #%2 spawned! %3", _factoryType, CRATE_SELECTED_FACTORY + 1, _costMessage];
     }];
 
     _btnResupply = _display ctrlCreate ["RscButton", 1036];
@@ -1132,28 +1141,7 @@ player addAction ["Open Crate Spawner", {
                 };
                 _labelCost ctrlSetStructuredText parseText "";
             } else {
-                if (CRATE_HOVERED_FACTORY >= 0 && CRATE_HOVERED_FACTORY < count CRATE_FACTORY_POSITIONS) then {
-                    _hoveredFactoryType = CRATE_FACTORY_TYPES select CRATE_HOVERED_FACTORY;
-                    _hoveredMorale = CRATE_FACTORY_MORALE select CRATE_HOVERED_FACTORY;
-                    _hoveredTaskPending = CRATE_FACTORY_TASK_PENDING select CRATE_HOVERED_FACTORY;
-                    _hoveredTaskType = CRATE_FACTORY_TASK_TYPE select CRATE_HOVERED_FACTORY;
-
-                    _moraleText = "Good";
-                    _moraleColor = "#0f0";
-                    if (_hoveredMorale < 70) then {_moraleText = "OK"; _moraleColor = "#ff0"};
-                    if (_hoveredMorale < 40) then {_moraleText = "Low"; _moraleColor = "#f80"};
-                    if (_hoveredMorale < 30) then {_moraleText = "Bad"; _moraleColor = "#f00"};
-
-                    _taskInfo = "";
-                    if (_hoveredTaskPending) then {
-                        _taskInfo = format ["<br/>Task: %1", _hoveredTaskType];
-                    };
-
-                    _infoText = format ["<t size='1.2' color='#0ff'>HOVER: %1 #%2</t><br/><br/><t color='%3'>Morale: %4</t>%5", _hoveredFactoryType, CRATE_HOVERED_FACTORY + 1, _moraleColor, _moraleText, _taskInfo];
-                    _infoBox ctrlSetStructuredText parseText _infoText;
-                } else {
-                    _infoBox ctrlSetStructuredText parseText "<t size='1.2'>No Factory</t><br/><br/>Click factory<br/>or click empty area";
-                };
+                _infoBox ctrlSetStructuredText parseText "<t size='1.2'>No Factory</t><br/><br/>Click factory<br/>or click empty area";
                 _inputInterval ctrlSetText "60";
                 lbClear _comboType;
                 _comboType lbAdd "Select Factory First";
