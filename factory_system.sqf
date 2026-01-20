@@ -67,6 +67,49 @@ player addAction ["Open Crate Spawner", {
 
         if (isNil "CRATE_HOVERED_FACTORY") then {CRATE_HOVERED_FACTORY = -1};
         CRATE_HOVERED_FACTORY = _hoveredFactory;
+
+        if (_hoveredFactory >= 0) then {
+            _factoryType = CRATE_FACTORY_TYPES select _hoveredFactory;
+            _morale = CRATE_FACTORY_MORALE select _hoveredFactory;
+            _taskPending = CRATE_FACTORY_TASK_PENDING select _hoveredFactory;
+            _taskType = CRATE_FACTORY_TASK_TYPE select _hoveredFactory;
+
+            _moraleText = "Good";
+            if (_morale < 70) then {_moraleText = "OK"};
+            if (_morale < 40) then {_moraleText = "Low"};
+            if (_morale < 30) then {_moraleText = "Bad"};
+
+            _taskInfo = "";
+            if (_taskPending) then {
+                _taskInfo = format ["\nTask: %1", _taskType];
+            };
+
+            _food = CRATE_FACTORY_FOOD select _hoveredFactory;
+            _water = CRATE_FACTORY_WATER select _hoveredFactory;
+            _wood = CRATE_FACTORY_WOOD select _hoveredFactory;
+            _metal = CRATE_FACTORY_METAL select _hoveredFactory;
+            _coal = CRATE_FACTORY_COAL select _hoveredFactory;
+            _elec = CRATE_FACTORY_ELECTRICITY select _hoveredFactory;
+
+            _resourceInfo = "";
+            if (_factoryType == "Town") then {
+                _resourceInfo = format ["\nMetal: %1%%", round _metal];
+            };
+            if (_factoryType == "Powerplant") then {
+                _resourceInfo = format ["\nCoal: %1%% | Water: %2%% | Metal: %3%%", round _coal, round _water, round _metal];
+            };
+            if (_factoryType == "Vehicle") then {
+                _resourceInfo = format ["\nElec: %1%% | Metal: %2%%", round _elec, round _metal];
+            };
+            if (_factoryType == "Mineral" || _factoryType == "Pier") then {
+                _resourceInfo = format ["\nFood: %1%% | Water: %2%% | Wood: %3%%", round _food, round _water, round _wood];
+            };
+
+            _hintText = format ["%1 Factory #%2\nMorale: %3%4%5", _factoryType, _hoveredFactory + 1, _moraleText, _taskInfo, _resourceInfo];
+            hintSilent _hintText;
+        } else {
+            hintSilent "";
+        };
     }];
 
     _map ctrlAddEventHandler ["MouseButtonDown", {
