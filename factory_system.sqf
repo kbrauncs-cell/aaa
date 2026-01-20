@@ -54,8 +54,12 @@ player addAction ["Open Crate Spawner", {
         {
             _factoryScreenPos = _control ctrlMapWorldToScreen _x;
             if (count _factoryScreenPos > 0) then {
-                _screenDist = sqrt (((_factoryScreenPos select 0) - _xPos) ^ 2 + ((_factoryScreenPos select 1) - _yPos) ^ 2);
-                if (_screenDist < 0.08) then {_hoveredFactory = _forEachIndex};
+                _factoryX = _factoryScreenPos select 0;
+                _factoryY = _factoryScreenPos select 1;
+                _screenDist = sqrt (((_factoryX - _xPos) ^ 2) + ((_factoryY - _yPos) ^ 2));
+                if (_screenDist < 0.15) then {
+                    _hoveredFactory = _forEachIndex;
+                };
             };
         } forEach CRATE_FACTORY_POSITIONS;
         CRATE_HOVERED_FACTORY = _hoveredFactory;
