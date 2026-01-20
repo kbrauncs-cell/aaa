@@ -1,4 +1,4 @@
-// Timed Crate Spawner GUI - v4 ENHANCED - Morale + Pier Factory + Dynamic Requests
+// Timed Crate Spawner GUI - v5 TASK SYSTEM - Hover Info + Task Objectives
 player addAction ["Open Crate Spawner", {
     createDialog "RscDisplayEmpty";
     _display = findDisplay -1;
@@ -10,7 +10,7 @@ player addAction ["Open Crate Spawner", {
 
     _title = _display ctrlCreate ["RscText", 1001];
     _title ctrlSetPosition [0.0, 0.0, 1.0, 0.06];
-    _title ctrlSetText "Timed Crate Spawner - Click Map to Place/Select Factory";
+    _title ctrlSetText "Factory Manager - Click to Place/Select | Hover for Info";
     _title ctrlSetBackgroundColor [0.2, 0.2, 0.2, 1];
     _title ctrlSetFontHeight 0.045;
     _title ctrlCommit 0;
@@ -41,10 +41,22 @@ player addAction ["Open Crate Spawner", {
     if (isNil "CRATE_SELECTED_FACTORY") then {CRATE_SELECTED_FACTORY = -1};
     if (isNil "CRATE_FACTORY_FIRES") then {CRATE_FACTORY_FIRES = []};
     if (isNil "CRATE_FACTORY_MORALE") then {CRATE_FACTORY_MORALE = []};
-    if (isNil "CRATE_FACTORY_REQUEST_PENDING") then {CRATE_FACTORY_REQUEST_PENDING = []};
-    if (isNil "CRATE_FACTORY_REQUEST_TYPE") then {CRATE_FACTORY_REQUEST_TYPE = []};
-    if (isNil "CRATE_FACTORY_REQUEST_AMOUNT") then {CRATE_FACTORY_REQUEST_AMOUNT = []};
-    if (isNil "CRATE_FACTORY_REQUEST_TIMER") then {CRATE_FACTORY_REQUEST_TIMER = []};
+    if (isNil "CRATE_FACTORY_TASK_PENDING") then {CRATE_FACTORY_TASK_PENDING = []};
+    if (isNil "CRATE_FACTORY_TASK_TYPE") then {CRATE_FACTORY_TASK_TYPE = []};
+    if (isNil "CRATE_FACTORY_TASK_OBJECTS") then {CRATE_FACTORY_TASK_OBJECTS = []};
+    if (isNil "CRATE_FACTORY_TASK_TIMER") then {CRATE_FACTORY_TASK_TIMER = []};
+    if (isNil "CRATE_HOVERED_FACTORY") then {CRATE_HOVERED_FACTORY = -1};
+
+    _map ctrlAddEventHandler ["MouseMoving", {
+        params ["_control", "_xPos", "_yPos"];
+        _worldPos = _control ctrlMapScreenToWorld [_xPos, _yPos];
+        _hoveredFactory = -1;
+        {
+            _dist = _worldPos distance2D _x;
+            if (_dist < 50) then {_hoveredFactory = _forEachIndex};
+        } forEach CRATE_FACTORY_POSITIONS;
+        CRATE_HOVERED_FACTORY = _hoveredFactory;
+    }];
 
     _map ctrlAddEventHandler ["MouseButtonDown", {
         params ["_control", "_button", "_xPos", "_yPos"];
@@ -81,6 +93,53 @@ player addAction ["Open Crate Spawner", {
                 _control drawEllipse [_x, 70, 70, 0, [1, 1, 0, 1], "#(rgb,1,1,1)color(0,0,0,0)"];
             };
             _control drawIcon ["\a3\ui_f\data\map\markers\nato\b_installation.paa",_color,_x,35,35,0,format ["F%1", _forEachIndex + 1],1,0.05,"PuristaMedium","right"];
+
+            if (_forEachIndex == CRATE_HOVERED_FACTORY) then {
+                _morale = CRATE_FACTORY_MORALE select _forEachIndex;
+                _moraleText = "Good";
+                _moraleColor = [0, 1, 0, 1];
+                if (_morale < 70) then {_moraleText = "OK"; _moraleColor = [1, 1, 0, 1]};
+                if (_morale < 40) then {_moraleText = "Low"; _moraleColor = [1, 0.5, 0, 1]};
+                if (_morale < 30) then {_moraleText = "Bad"; _moraleColor = [1, 0, 0, 1]};
+
+                _taskPending = CRATE_FACTORY_TASK_PENDING select _forEachIndex;
+                _taskType = CRATE_FACTORY_TASK_TYPE select _forEachIndex;
+                _taskObjects = CRATE_FACTORY_TASK_OBJECTS select _forEachIndex;
+                _aliveObjects = _taskObjects select {alive _x};
+
+                _taskText = "";
+                if (_taskPending) then {
+                    _taskText = format ["\nTask: %1 (%2/%3)", _taskType, count _aliveObjects, count _taskObjects];
+                };
+
+                _food = CRATE_FACTORY_FOOD select _forEachIndex;
+                _water = CRATE_FACTORY_WATER select _forEachIndex;
+                _wood = CRATE_FACTORY_WOOD select _forEachIndex;
+                _metal = CRATE_FACTORY_METAL select _forEachIndex;
+                _coal = CRATE_FACTORY_COAL select _forEachIndex;
+                _elec = CRATE_FACTORY_ELECTRICITY select _forEachIndex;
+
+                _resourceText = "";
+                if (_factoryType == "Town") then {
+                    _resourceText = format ["\nMetal: %1%%", round _metal];
+                } else {
+                    if (_factoryType == "Powerplant") then {
+                        _resourceText = format ["\nCoal: %1%% | Water: %2%% | Metal: %3%%", round _coal, round _water, round _metal];
+                    } else {
+                        if (_factoryType == "Vehicle") then {
+                            _resourceText = format ["\nElec: %1%% | Metal: %2%%", round _elec, round _metal];
+                        } else {
+                            if (_factoryType == "Mineral" || _factoryType == "Pier") then {
+                                _resourceText = format ["\nFood: %1%% | Water: %2%% | Wood: %3%%", round _food, round _water, round _wood];
+                            };
+                        };
+                    };
+                };
+
+                _tooltipPos = [(_x select 0) + 0.001, (_x select 1) + 0.001];
+                _tooltipText = format ["%1 #%2\nMorale: %3%4%5", _factoryType, _forEachIndex + 1, _moraleText, _taskText, _resourceText];
+                _control drawIcon ["", _moraleColor, _tooltipPos, 0, 0, 0, _tooltipText, 2, 0.035, "PuristaMedium", "left"];
+            };
         } forEach CRATE_FACTORY_POSITIONS;
     }];
 
@@ -90,18 +149,18 @@ player addAction ["Open Crate Spawner", {
     _settingsBg ctrlCommit 0;
 
     _infoBox = _display ctrlCreate ["RscStructuredText", 1050];
-    _infoBox ctrlSetPosition [0.68, 0.09, 0.30, 0.14];
+    _infoBox ctrlSetPosition [0.68, 0.09, 0.30, 0.10];
     _infoBox ctrlSetBackgroundColor [0.1, 0.1, 0.1, 1];
     _infoBox ctrlCommit 0;
 
     _labelFactoryType = _display ctrlCreate ["RscText", 1023];
-    _labelFactoryType ctrlSetPosition [0.68, 0.24, 0.30, 0.025];
+    _labelFactoryType ctrlSetPosition [0.68, 0.20, 0.30, 0.025];
     _labelFactoryType ctrlSetText "New Factory Type:";
     _labelFactoryType ctrlSetFontHeight 0.032;
     _labelFactoryType ctrlCommit 0;
 
     _comboFactoryType = _display ctrlCreate ["RscCombo", 1024];
-    _comboFactoryType ctrlSetPosition [0.68, 0.265, 0.30, 0.035];
+    _comboFactoryType ctrlSetPosition [0.68, 0.225, 0.30, 0.035];
     _comboFactoryType lbAdd "Mineral Factory";
     _comboFactoryType lbSetData [0, "Mineral"];
     _comboFactoryType lbAdd "Town Factory";
@@ -118,7 +177,7 @@ player addAction ["Open Crate Spawner", {
     _comboFactoryType ctrlCommit 0;
 
     _labelCost = _display ctrlCreate ["RscStructuredText", 1051];
-    _labelCost ctrlSetPosition [0.68, 0.30, 0.30, 0.13];
+    _labelCost ctrlSetPosition [0.68, 0.26, 0.30, 0.13];
     _labelCost ctrlSetBackgroundColor [0.1, 0.1, 0.1, 1];
     _labelCost ctrlCommit 0;
 
@@ -191,7 +250,7 @@ player addAction ["Open Crate Spawner", {
     }];
 
     _btnSpawnFactory = _display ctrlCreate ["RscButton", 1025];
-    _btnSpawnFactory ctrlSetPosition [0.68, 0.43, 0.30, 0.04];
+    _btnSpawnFactory ctrlSetPosition [0.68, 0.39, 0.30, 0.04];
     _btnSpawnFactory ctrlSetText "SPAWN FACTORY";
     _btnSpawnFactory ctrlSetBackgroundColor [0, 0.4, 0.7, 1];
     _btnSpawnFactory ctrlSetFontHeight 0.032;
@@ -319,10 +378,10 @@ player addAction ["Open Crate Spawner", {
         CRATE_FACTORY_NEEDS_MAINTENANCE pushBack false;
         CRATE_FACTORY_FIRES pushBack [];
         CRATE_FACTORY_MORALE pushBack 100;
-        CRATE_FACTORY_REQUEST_PENDING pushBack false;
-        CRATE_FACTORY_REQUEST_TYPE pushBack "";
-        CRATE_FACTORY_REQUEST_AMOUNT pushBack 0;
-        CRATE_FACTORY_REQUEST_TIMER pushBack (300 + random 600);
+        CRATE_FACTORY_TASK_PENDING pushBack false;
+        CRATE_FACTORY_TASK_TYPE pushBack "";
+        CRATE_FACTORY_TASK_OBJECTS pushBack [];
+        CRATE_FACTORY_TASK_TIMER pushBack (3600 + random 18000);
 
         CRATE_SELECTED_FACTORY = (count CRATE_FACTORY_POSITIONS) - 1;
         CRATE_PENDING_LOCATION = [];
@@ -330,108 +389,9 @@ player addAction ["Open Crate Spawner", {
         systemChat format ["Factory %1 spawned!", CRATE_SELECTED_FACTORY + 1];
     }];
 
-    _resourceY = 0.48;
-    _barSpacing = 0.038;
-
-    _labelSupply = _display ctrlCreate ["RscText", 1031];
-    _labelSupply ctrlSetPosition [0.68, _resourceY, 0.30, 0.025];
-    _labelSupply ctrlSetText "Resources:";
-    _labelSupply ctrlSetFontHeight 0.03;
-    _labelSupply ctrlCommit 0;
-
-    _supplyBarBg = _display ctrlCreate ["RscText", 1029];
-    _supplyBarBg ctrlSetPosition [0.68, _resourceY + 0.025, 0.30, 0.022];
-    _supplyBarBg ctrlSetBackgroundColor [0.2, 0.2, 0.2, 1];
-    _supplyBarBg ctrlCommit 0;
-
-    _supplyBar = _display ctrlCreate ["RscText", 1030];
-    _supplyBar ctrlSetPosition [0.68, _resourceY + 0.025, 0, 0.022];
-    _supplyBar ctrlSetBackgroundColor [0, 0.8, 0, 1];
-    _supplyBar ctrlCommit 0;
-
-    _resourceY = _resourceY + _barSpacing;
-    _labelWater = _display ctrlCreate ["RscText", 1035];
-    _labelWater ctrlSetPosition [0.68, _resourceY + 0.025, 0.30, 0.025];
-    _labelWater ctrlSetText "Water: 100%";
-    _labelWater ctrlSetFontHeight 0.03;
-    _labelWater ctrlShow false;
-    _labelWater ctrlCommit 0;
-
-    _waterBarBg = _display ctrlCreate ["RscText", 1033];
-    _waterBarBg ctrlSetPosition [0.68, _resourceY + 0.05, 0.30, 0.022];
-    _waterBarBg ctrlSetBackgroundColor [0.2, 0.2, 0.2, 1];
-    _waterBarBg ctrlShow false;
-    _waterBarBg ctrlCommit 0;
-
-    _waterBar = _display ctrlCreate ["RscText", 1034];
-    _waterBar ctrlSetPosition [0.68, _resourceY + 0.05, 0, 0.022];
-    _waterBar ctrlSetBackgroundColor [0, 0.5, 1, 1];
-    _waterBar ctrlShow false;
-    _waterBar ctrlCommit 0;
-
-    _resourceY = _resourceY + _barSpacing;
-    _labelWood = _display ctrlCreate ["RscText", 1044];
-    _labelWood ctrlSetPosition [0.68, _resourceY + 0.05, 0.30, 0.025];
-    _labelWood ctrlSetText "Wood: 100%";
-    _labelWood ctrlSetFontHeight 0.03;
-    _labelWood ctrlShow false;
-    _labelWood ctrlCommit 0;
-
-    _woodBarBg = _display ctrlCreate ["RscText", 1046];
-    _woodBarBg ctrlSetPosition [0.68, _resourceY + 0.075, 0.30, 0.022];
-    _woodBarBg ctrlSetBackgroundColor [0.2, 0.2, 0.2, 1];
-    _woodBarBg ctrlShow false;
-    _woodBarBg ctrlCommit 0;
-
-    _woodBar = _display ctrlCreate ["RscText", 1045];
-    _woodBar ctrlSetPosition [0.68, _resourceY + 0.075, 0, 0.022];
-    _woodBar ctrlSetBackgroundColor [0.6, 0.4, 0.2, 1];
-    _woodBar ctrlShow false;
-    _woodBar ctrlCommit 0;
-
-    _resourceY = _resourceY + _barSpacing;
-    _labelMetal = _display ctrlCreate ["RscText", 1041];
-    _labelMetal ctrlSetPosition [0.68, _resourceY + 0.075, 0.30, 0.025];
-    _labelMetal ctrlSetText "Metal: 100%";
-    _labelMetal ctrlSetFontHeight 0.03;
-    _labelMetal ctrlShow false;
-    _labelMetal ctrlCommit 0;
-
-    _metalBarBg = _display ctrlCreate ["RscText", 1043];
-    _metalBarBg ctrlSetPosition [0.68, _resourceY + 0.10, 0.30, 0.022];
-    _metalBarBg ctrlSetBackgroundColor [0.2, 0.2, 0.2, 1];
-    _metalBarBg ctrlShow false;
-    _metalBarBg ctrlCommit 0;
-
-    _metalBar = _display ctrlCreate ["RscText", 1042];
-    _metalBar ctrlSetPosition [0.68, _resourceY + 0.10, 0, 0.022];
-    _metalBar ctrlSetBackgroundColor [0.6, 0.6, 0.7, 1];
-    _metalBar ctrlShow false;
-    _metalBar ctrlCommit 0;
-
-    _resourceY = _resourceY + _barSpacing;
-    _labelElectricity = _display ctrlCreate ["RscText", 1038];
-    _labelElectricity ctrlSetPosition [0.68, _resourceY + 0.10, 0.30, 0.025];
-    _labelElectricity ctrlSetText "Electricity: 0%";
-    _labelElectricity ctrlSetFontHeight 0.03;
-    _labelElectricity ctrlShow false;
-    _labelElectricity ctrlCommit 0;
-
-    _electricityBarBg = _display ctrlCreate ["RscText", 1039];
-    _electricityBarBg ctrlSetPosition [0.68, _resourceY + 0.125, 0.30, 0.022];
-    _electricityBarBg ctrlSetBackgroundColor [0.2, 0.2, 0.2, 1];
-    _electricityBarBg ctrlShow false;
-    _electricityBarBg ctrlCommit 0;
-
-    _electricityBar = _display ctrlCreate ["RscText", 1040];
-    _electricityBar ctrlSetPosition [0.68, _resourceY + 0.125, 0, 0.022];
-    _electricityBar ctrlSetBackgroundColor [1, 1, 0, 1];
-    _electricityBar ctrlShow false;
-    _electricityBar ctrlCommit 0;
-
     _btnResupply = _display ctrlCreate ["RscButton", 1036];
-    _btnResupply ctrlSetPosition [0.68, 0.70, 0.30, 0.035];
-    _btnResupply ctrlSetText "FULFILL REQUEST / RESUPPLY";
+    _btnResupply ctrlSetPosition [0.68, 0.44, 0.30, 0.035];
+    _btnResupply ctrlSetText "RESUPPLY";
     _btnResupply ctrlSetBackgroundColor [0.2, 0.6, 0.4, 1];
     _btnResupply ctrlSetFontHeight 0.028;
     _btnResupply ctrlCommit 0;
@@ -444,171 +404,140 @@ player addAction ["Open Crate Spawner", {
         _factoryPos = CRATE_FACTORY_POSITIONS select _selectedIndex;
         _replenished = false;
 
-        _hasPendingRequest = CRATE_FACTORY_REQUEST_PENDING select _selectedIndex;
-        if (_hasPendingRequest) then {
-            _requestType = CRATE_FACTORY_REQUEST_TYPE select _selectedIndex;
-            _requestAmount = CRATE_FACTORY_REQUEST_AMOUNT select _selectedIndex;
-            _requestClassname = "Land_FoodSacks_01_large_white_idap_F";
-            if (_requestType == "Water") then {_requestClassname = "Land_PaperBox_01_open_water_F"};
-            if (_requestType == "Wood") then {_requestClassname = "Land_WoodPile_03_F"};
-            if (_requestType == "Coal") then {_requestClassname = "Land_PaperBox_closed_F"};
-            if (_requestType == "Metal") then {_requestClassname = "Land_CargoBox_V1_F"};
-            if (_requestType == "Energy") then {_requestClassname = "Land_PortableServer_01_sand_F"};
-
-            _nearCrates = nearestObjects [_factoryPos, [_requestClassname], 25];
-            if (count _nearCrates >= _requestAmount) then {
-                for "_i" from 0 to (_requestAmount - 1) do {deleteVehicle (_nearCrates select _i)};
-                CRATE_FACTORY_REQUEST_PENDING set [_selectedIndex, false];
-                CRATE_FACTORY_REQUEST_TYPE set [_selectedIndex, ""];
-                CRATE_FACTORY_REQUEST_AMOUNT set [_selectedIndex, 0];
-                CRATE_FACTORY_REQUEST_TIMER set [_selectedIndex, (300 + random 600)];
-                CRATE_FACTORY_MORALE set [_selectedIndex, 100];
-
-                _fires = CRATE_FACTORY_FIRES select _selectedIndex;
-                {deleteVehicle _x} forEach _fires;
-                CRATE_FACTORY_FIRES set [_selectedIndex, []];
-
-                systemChat format ["Request fulfilled! Used %1x %2. Morale restored!", _requestAmount, _requestType];
-                _replenished = true;
-            } else {
-                systemChat format ["Need %1x %2 within 25m for request! (Found: %3)", _requestAmount, _requestType, count _nearCrates];
-            };
-        } else {
-            if (_factoryType == "Town") then {
-                _currentMetal = CRATE_FACTORY_METAL select _selectedIndex;
-                if (_currentMetal < 100) then {
-                    _nearMetalCrates = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 25];
-                    if (count _nearMetalCrates > 0) then {
-                        deleteVehicle (_nearMetalCrates select 0);
-                        _newMetal = (_currentMetal + 25) min 100;
-                        CRATE_FACTORY_METAL set [_selectedIndex, _newMetal];
-                        systemChat format ["Metal +25%% (%1%%)", round _newMetal];
-                        _replenished = true;
-                    };
+        if (_factoryType == "Town") then {
+            _currentMetal = CRATE_FACTORY_METAL select _selectedIndex;
+            if (_currentMetal < 100) then {
+                _nearMetalCrates = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 25];
+                if (count _nearMetalCrates > 0) then {
+                    deleteVehicle (_nearMetalCrates select 0);
+                    _newMetal = (_currentMetal + 25) min 100;
+                    CRATE_FACTORY_METAL set [_selectedIndex, _newMetal];
+                    systemChat format ["Metal +25%% (%1%%)", round _newMetal];
+                    _replenished = true;
                 };
             };
-            if (_factoryType == "Powerplant") then {
-                _currentCoal = CRATE_FACTORY_COAL select _selectedIndex;
-                _currentWater = CRATE_FACTORY_WATER select _selectedIndex;
-                _currentMetal = CRATE_FACTORY_METAL select _selectedIndex;
-                if (_currentCoal < 100) then {
-                    _nearCoalCrates = nearestObjects [_factoryPos, ["Land_PaperBox_closed_F"], 25];
-                    if (count _nearCoalCrates > 0) then {
-                        deleteVehicle (_nearCoalCrates select 0);
-                        _newCoal = (_currentCoal + 25) min 100;
-                        CRATE_FACTORY_COAL set [_selectedIndex, _newCoal];
-                        systemChat format ["Coal +25%% (%1%%)", round _newCoal];
-                        _replenished = true;
-                    };
-                };
-                if (_currentWater < 100) then {
-                    _nearWaterCrates = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 25];
-                    if (count _nearWaterCrates > 0) then {
-                        deleteVehicle (_nearWaterCrates select 0);
-                        _newWater = (_currentWater + 25) min 100;
-                        CRATE_FACTORY_WATER set [_selectedIndex, _newWater];
-                        systemChat format ["Water +25%% (%1%%)", round _newWater];
-                        _replenished = true;
-                    };
-                };
-                if (_currentMetal < 100) then {
-                    _nearMetalCrates = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 25];
-                    if (count _nearMetalCrates > 0) then {
-                        deleteVehicle (_nearMetalCrates select 0);
-                        _newMetal = (_currentMetal + 25) min 100;
-                        CRATE_FACTORY_METAL set [_selectedIndex, _newMetal];
-                        systemChat format ["Metal +25%% (%1%%)", round _newMetal];
-                        _replenished = true;
-                    };
-                };
-            };
-            if (_factoryType == "Vehicle") then {
-                _currentElectricity = CRATE_FACTORY_ELECTRICITY select _selectedIndex;
-                _currentMetal = CRATE_FACTORY_METAL select _selectedIndex;
-                if (_currentElectricity < 100) then {
-                    _nearEnergyCrates = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 25];
-                    if (count _nearEnergyCrates > 0) then {
-                        deleteVehicle (_nearEnergyCrates select 0);
-                        _newElectricity = (_currentElectricity + 25) min 100;
-                        CRATE_FACTORY_ELECTRICITY set [_selectedIndex, _newElectricity];
-                        systemChat format ["Electricity +25%% (%1%%)", round _newElectricity];
-                        _replenished = true;
-                    };
-                };
-                if (_currentMetal < 100) then {
-                    _nearMetalCrates = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 25];
-                    if (count _nearMetalCrates > 0) then {
-                        deleteVehicle (_nearMetalCrates select 0);
-                        _newMetal = (_currentMetal + 25) min 100;
-                        CRATE_FACTORY_METAL set [_selectedIndex, _newMetal];
-                        systemChat format ["Metal +25%% (%1%%)", round _newMetal];
-                        _replenished = true;
-                    };
-                };
-            };
-            if (_factoryType == "Mineral" || _factoryType == "Pier") then {
-                _currentFood = CRATE_FACTORY_FOOD select _selectedIndex;
-                _currentWater = CRATE_FACTORY_WATER select _selectedIndex;
-                _currentWood = CRATE_FACTORY_WOOD select _selectedIndex;
-                _currentElectricity = CRATE_FACTORY_ELECTRICITY select _selectedIndex;
-                _currentMetal = CRATE_FACTORY_METAL select _selectedIndex;
-                if (_currentFood < 100) then {
-                    _nearFoodCrates = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 25];
-                    if (count _nearFoodCrates > 0) then {
-                        deleteVehicle (_nearFoodCrates select 0);
-                        _newFood = (_currentFood + 25) min 100;
-                        CRATE_FACTORY_FOOD set [_selectedIndex, _newFood];
-                        systemChat format ["Food +25%% (%1%%)", round _newFood];
-                        _replenished = true;
-                    };
-                };
-                if (_currentWater < 100) then {
-                    _nearWaterCrates = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 25];
-                    if (count _nearWaterCrates > 0) then {
-                        deleteVehicle (_nearWaterCrates select 0);
-                        _newWater = (_currentWater + 25) min 100;
-                        CRATE_FACTORY_WATER set [_selectedIndex, _newWater];
-                        systemChat format ["Water +25%% (%1%%)", round _newWater];
-                        _replenished = true;
-                    };
-                };
-                if (_currentWood < 100) then {
-                    _nearWoodCrates = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 25];
-                    if (count _nearWoodCrates > 0) then {
-                        deleteVehicle (_nearWoodCrates select 0);
-                        _newWood = (_currentWood + 25) min 100;
-                        CRATE_FACTORY_WOOD set [_selectedIndex, _newWood];
-                        systemChat format ["Wood +25%% (%1%%)", round _newWood];
-                        _replenished = true;
-                    };
-                };
-                if (_currentElectricity < 100) then {
-                    _nearEnergyCrates = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 25];
-                    if (count _nearEnergyCrates > 0) then {
-                        deleteVehicle (_nearEnergyCrates select 0);
-                        _newElectricity = (_currentElectricity + 25) min 100;
-                        CRATE_FACTORY_ELECTRICITY set [_selectedIndex, _newElectricity];
-                        systemChat format ["Electricity +25%% (%1%%)", round _newElectricity];
-                        _replenished = true;
-                    };
-                };
-                if (_currentMetal < 100) then {
-                    _nearMetalCrates = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 25];
-                    if (count _nearMetalCrates > 0) then {
-                        deleteVehicle (_nearMetalCrates select 0);
-                        _newMetal = (_currentMetal + 25) min 100;
-                        CRATE_FACTORY_METAL set [_selectedIndex, _newMetal];
-                        systemChat format ["Metal +25%% (%1%%)", round _newMetal];
-                        _replenished = true;
-                    };
-                };
-            };
-            if (!_replenished) then {systemChat "No crates or all full!"};
         };
+        if (_factoryType == "Powerplant") then {
+            _currentCoal = CRATE_FACTORY_COAL select _selectedIndex;
+            _currentWater = CRATE_FACTORY_WATER select _selectedIndex;
+            _currentMetal = CRATE_FACTORY_METAL select _selectedIndex;
+            if (_currentCoal < 100) then {
+                _nearCoalCrates = nearestObjects [_factoryPos, ["Land_PaperBox_closed_F"], 25];
+                if (count _nearCoalCrates > 0) then {
+                    deleteVehicle (_nearCoalCrates select 0);
+                    _newCoal = (_currentCoal + 25) min 100;
+                    CRATE_FACTORY_COAL set [_selectedIndex, _newCoal];
+                    systemChat format ["Coal +25%% (%1%%)", round _newCoal];
+                    _replenished = true;
+                };
+            };
+            if (_currentWater < 100) then {
+                _nearWaterCrates = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 25];
+                if (count _nearWaterCrates > 0) then {
+                    deleteVehicle (_nearWaterCrates select 0);
+                    _newWater = (_currentWater + 25) min 100;
+                    CRATE_FACTORY_WATER set [_selectedIndex, _newWater];
+                    systemChat format ["Water +25%% (%1%%)", round _newWater];
+                    _replenished = true;
+                };
+            };
+            if (_currentMetal < 100) then {
+                _nearMetalCrates = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 25];
+                if (count _nearMetalCrates > 0) then {
+                    deleteVehicle (_nearMetalCrates select 0);
+                    _newMetal = (_currentMetal + 25) min 100;
+                    CRATE_FACTORY_METAL set [_selectedIndex, _newMetal];
+                    systemChat format ["Metal +25%% (%1%%)", round _newMetal];
+                    _replenished = true;
+                };
+            };
+        };
+        if (_factoryType == "Vehicle") then {
+            _currentElectricity = CRATE_FACTORY_ELECTRICITY select _selectedIndex;
+            _currentMetal = CRATE_FACTORY_METAL select _selectedIndex;
+            if (_currentElectricity < 100) then {
+                _nearEnergyCrates = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 25];
+                if (count _nearEnergyCrates > 0) then {
+                    deleteVehicle (_nearEnergyCrates select 0);
+                    _newElectricity = (_currentElectricity + 25) min 100;
+                    CRATE_FACTORY_ELECTRICITY set [_selectedIndex, _newElectricity];
+                    systemChat format ["Electricity +25%% (%1%%)", round _newElectricity];
+                    _replenished = true;
+                };
+            };
+            if (_currentMetal < 100) then {
+                _nearMetalCrates = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 25];
+                if (count _nearMetalCrates > 0) then {
+                    deleteVehicle (_nearMetalCrates select 0);
+                    _newMetal = (_currentMetal + 25) min 100;
+                    CRATE_FACTORY_METAL set [_selectedIndex, _newMetal];
+                    systemChat format ["Metal +25%% (%1%%)", round _newMetal];
+                    _replenished = true;
+                };
+            };
+        };
+        if (_factoryType == "Mineral" || _factoryType == "Pier") then {
+            _currentFood = CRATE_FACTORY_FOOD select _selectedIndex;
+            _currentWater = CRATE_FACTORY_WATER select _selectedIndex;
+            _currentWood = CRATE_FACTORY_WOOD select _selectedIndex;
+            _currentElectricity = CRATE_FACTORY_ELECTRICITY select _selectedIndex;
+            _currentMetal = CRATE_FACTORY_METAL select _selectedIndex;
+            if (_currentFood < 100) then {
+                _nearFoodCrates = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 25];
+                if (count _nearFoodCrates > 0) then {
+                    deleteVehicle (_nearFoodCrates select 0);
+                    _newFood = (_currentFood + 25) min 100;
+                    CRATE_FACTORY_FOOD set [_selectedIndex, _newFood];
+                    systemChat format ["Food +25%% (%1%%)", round _newFood];
+                    _replenished = true;
+                };
+            };
+            if (_currentWater < 100) then {
+                _nearWaterCrates = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 25];
+                if (count _nearWaterCrates > 0) then {
+                    deleteVehicle (_nearWaterCrates select 0);
+                    _newWater = (_currentWater + 25) min 100;
+                    CRATE_FACTORY_WATER set [_selectedIndex, _newWater];
+                    systemChat format ["Water +25%% (%1%%)", round _newWater];
+                    _replenished = true;
+                };
+            };
+            if (_currentWood < 100) then {
+                _nearWoodCrates = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 25];
+                if (count _nearWoodCrates > 0) then {
+                    deleteVehicle (_nearWoodCrates select 0);
+                    _newWood = (_currentWood + 25) min 100;
+                    CRATE_FACTORY_WOOD set [_selectedIndex, _newWood];
+                    systemChat format ["Wood +25%% (%1%%)", round _newWood];
+                    _replenished = true;
+                };
+            };
+            if (_currentElectricity < 100) then {
+                _nearEnergyCrates = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 25];
+                if (count _nearEnergyCrates > 0) then {
+                    deleteVehicle (_nearEnergyCrates select 0);
+                    _newElectricity = (_currentElectricity + 25) min 100;
+                    CRATE_FACTORY_ELECTRICITY set [_selectedIndex, _newElectricity];
+                    systemChat format ["Electricity +25%% (%1%%)", round _newElectricity];
+                    _replenished = true;
+                };
+            };
+            if (_currentMetal < 100) then {
+                _nearMetalCrates = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 25];
+                if (count _nearMetalCrates > 0) then {
+                    deleteVehicle (_nearMetalCrates select 0);
+                    _newMetal = (_currentMetal + 25) min 100;
+                    CRATE_FACTORY_METAL set [_selectedIndex, _newMetal];
+                    systemChat format ["Metal +25%% (%1%%)", round _newMetal];
+                    _replenished = true;
+                };
+            };
+        };
+        if (!_replenished) then {systemChat "No crates or all full!"};
     }];
 
     _btnStartFactory = _display ctrlCreate ["RscButton", 1026];
-    _btnStartFactory ctrlSetPosition [0.68, 0.74, 0.145, 0.035];
+    _btnStartFactory ctrlSetPosition [0.68, 0.48, 0.145, 0.035];
     _btnStartFactory ctrlSetText "START";
     _btnStartFactory ctrlSetBackgroundColor [0, 0.5, 0, 1];
     _btnStartFactory ctrlSetFontHeight 0.032;
@@ -649,52 +578,66 @@ player addAction ["Open Crate Spawner", {
                 _needsMaint = CRATE_FACTORY_NEEDS_MAINTENANCE select _factoryIndex;
                 if (_needsMaint) exitWith {};
 
-                _requestTimer = CRATE_FACTORY_REQUEST_TIMER select _factoryIndex;
-                _hasPendingRequest = CRATE_FACTORY_REQUEST_PENDING select _factoryIndex;
-                if (!_hasPendingRequest && _requestTimer > 0) then {
-                    _requestTimer = _requestTimer - 0.5;
-                    CRATE_FACTORY_REQUEST_TIMER set [_factoryIndex, _requestTimer];
-                    if (_requestTimer <= 0) then {
-                        _totalFactories = count CRATE_FACTORY_TYPES;
-                        _outputType = CRATE_FACTORY_CRATETYPES select _factoryIndex;
-                        _isRareOutput = false;
-                        if (_outputType in ["Land_Boxloader_Fort_iso_Brown", "Land_PaperBox_open_full_F", "Land_CratesWooden_F", "CargoNet_01_barrels_F"]) then {
-                            _isRareOutput = true;
+                _taskTimer = CRATE_FACTORY_TASK_TIMER select _factoryIndex;
+                _hasTask = CRATE_FACTORY_TASK_PENDING select _factoryIndex;
+                if (!_hasTask && _taskTimer > 0) then {
+                    _taskTimer = _taskTimer - 0.5;
+                    CRATE_FACTORY_TASK_TIMER set [_factoryIndex, _taskTimer];
+                    if (_taskTimer <= 0) then {
+                        _isCivilian = (random 1 < 0.75);
+                        _taskType = if (_isCivilian) then {"Civilian"} else {"Military"};
+
+                        _nearUnits = [];
+                        if (_isCivilian) then {
+                            _nearUnits = (nearestObjects [_factoryPos, ["Man"], 400]) select {side _x == civilian && alive _x};
+                        } else {
+                            _nearUnits = (nearestObjects [_factoryPos, ["Man"], 400]) select {(side _x == east || side _x == independent) && alive _x};
                         };
-                        _requestChance = if (_isRareOutput) then {0.3} else {0.7};
-                        if (random 1 < _requestChance) then {
-                            _possibleTypes = ["Food", "Water", "Wood", "Coal", "Metal", "Energy"];
-                            _requestType = selectRandom _possibleTypes;
-                            _baseAmount = 1 + floor(random 3);
-                            _factoryMultiplier = 1 + floor(_totalFactories / 3);
-                            _requestAmount = _baseAmount * _factoryMultiplier;
-                            CRATE_FACTORY_REQUEST_PENDING set [_factoryIndex, true];
-                            CRATE_FACTORY_REQUEST_TYPE set [_factoryIndex, _requestType];
-                            CRATE_FACTORY_REQUEST_AMOUNT set [_factoryIndex, _requestAmount];
-                            systemChat format ["Factory %1 requests %2x %3!", _factoryIndex + 1, _requestAmount, _requestType];
+
+                        if (count _nearUnits > 0) then {
+                            CRATE_FACTORY_TASK_PENDING set [_factoryIndex, true];
+                            CRATE_FACTORY_TASK_TYPE set [_factoryIndex, _taskType];
+                            CRATE_FACTORY_TASK_OBJECTS set [_factoryIndex, _nearUnits];
+                            systemChat format ["Factory %1: %2 task created! Eliminate %3 targets.", _factoryIndex + 1, _taskType, count _nearUnits];
                         };
-                        CRATE_FACTORY_REQUEST_TIMER set [_factoryIndex, (300 + random 600)];
+                        CRATE_FACTORY_TASK_TIMER set [_factoryIndex, (3600 + random 18000)];
                     };
                 };
 
-                if (_hasPendingRequest) then {
-                    _currentMorale = CRATE_FACTORY_MORALE select _factoryIndex;
-                    _newMorale = (_currentMorale - 0.5) max 0;
-                    CRATE_FACTORY_MORALE set [_factoryIndex, _newMorale];
-                    if (_newMorale <= 30) then {
+                if (_hasTask) then {
+                    _taskObjects = CRATE_FACTORY_TASK_OBJECTS select _factoryIndex;
+                    _aliveObjects = _taskObjects select {alive _x};
+                    if (count _aliveObjects == 0) then {
+                        CRATE_FACTORY_TASK_PENDING set [_factoryIndex, false];
+                        CRATE_FACTORY_TASK_TYPE set [_factoryIndex, ""];
+                        CRATE_FACTORY_TASK_OBJECTS set [_factoryIndex, []];
+                        CRATE_FACTORY_MORALE set [_factoryIndex, 100];
+                        CRATE_FACTORY_TASK_TIMER set [_factoryIndex, (3600 + random 18000)];
+
                         _fires = CRATE_FACTORY_FIRES select _factoryIndex;
-                        if (count _fires == 0) then {
-                            _fireCount = 1 + floor(random 3);
-                            for "_i" from 1 to _fireCount do {
-                                _randomOffset = [random 20 - 10, random 20 - 10, 0];
-                                _firePos = _factoryPos vectorAdd _randomOffset;
-                                _fire = "#particlesource" createVehicleLocal _firePos;
-                                _fire setParticleClass "ObjectDestructionFire1Smallx";
-                                _fire setPosATL [_firePos select 0, _firePos select 1, 0.5];
-                                _fires pushBack _fire;
+                        {deleteVehicle _x} forEach _fires;
+                        CRATE_FACTORY_FIRES set [_factoryIndex, []];
+
+                        systemChat format ["Factory %1: Task complete! Morale restored.", _factoryIndex + 1];
+                    } else {
+                        _currentMorale = CRATE_FACTORY_MORALE select _factoryIndex;
+                        _newMorale = (_currentMorale - 0.5) max 0;
+                        CRATE_FACTORY_MORALE set [_factoryIndex, _newMorale];
+                        if (_newMorale <= 30) then {
+                            _fires = CRATE_FACTORY_FIRES select _factoryIndex;
+                            if (count _fires == 0) then {
+                                _fireCount = 1 + floor(random 3);
+                                for "_i" from 1 to _fireCount do {
+                                    _randomOffset = [random 20 - 10, random 20 - 10, 0];
+                                    _firePos = _factoryPos vectorAdd _randomOffset;
+                                    _fire = "#particlesource" createVehicleLocal _firePos;
+                                    _fire setParticleClass "ObjectDestructionFire1Smallx";
+                                    _fire setPosATL [_firePos select 0, _firePos select 1, 0.5];
+                                    _fires pushBack _fire;
+                                };
+                                CRATE_FACTORY_FIRES set [_factoryIndex, _fires];
+                                systemChat format ["Factory %1 morale critical! Fire started!", _factoryIndex + 1];
                             };
-                            CRATE_FACTORY_FIRES set [_factoryIndex, _fires];
-                            systemChat format ["Factory %1 morale critical! Fire started!", _factoryIndex + 1];
                         };
                     };
                 };
@@ -900,7 +843,7 @@ player addAction ["Open Crate Spawner", {
     }];
 
     _btnStopFactory = _display ctrlCreate ["RscButton", 1027];
-    _btnStopFactory ctrlSetPosition [0.835, 0.74, 0.145, 0.035];
+    _btnStopFactory ctrlSetPosition [0.835, 0.48, 0.145, 0.035];
     _btnStopFactory ctrlSetText "STOP";
     _btnStopFactory ctrlSetBackgroundColor [0.5, 0, 0, 1];
     _btnStopFactory ctrlSetFontHeight 0.032;
@@ -919,7 +862,7 @@ player addAction ["Open Crate Spawner", {
     }];
 
     _btnDelete = _display ctrlCreate ["RscButton", 1019];
-    _btnDelete ctrlSetPosition [0.68, 0.78, 0.30, 0.035];
+    _btnDelete ctrlSetPosition [0.68, 0.52, 0.30, 0.035];
     _btnDelete ctrlSetText "DELETE SELECTED";
     _btnDelete ctrlSetBackgroundColor [0.5, 0.2, 0, 1];
     _btnDelete ctrlSetFontHeight 0.032;
@@ -952,35 +895,35 @@ player addAction ["Open Crate Spawner", {
         CRATE_FACTORY_NEEDS_MAINTENANCE deleteAt _selectedIndex;
         CRATE_FACTORY_FIRES deleteAt _selectedIndex;
         CRATE_FACTORY_MORALE deleteAt _selectedIndex;
-        CRATE_FACTORY_REQUEST_PENDING deleteAt _selectedIndex;
-        CRATE_FACTORY_REQUEST_TYPE deleteAt _selectedIndex;
-        CRATE_FACTORY_REQUEST_AMOUNT deleteAt _selectedIndex;
-        CRATE_FACTORY_REQUEST_TIMER deleteAt _selectedIndex;
+        CRATE_FACTORY_TASK_PENDING deleteAt _selectedIndex;
+        CRATE_FACTORY_TASK_TYPE deleteAt _selectedIndex;
+        CRATE_FACTORY_TASK_OBJECTS deleteAt _selectedIndex;
+        CRATE_FACTORY_TASK_TIMER deleteAt _selectedIndex;
         CRATE_SELECTED_FACTORY = -1;
         systemChat "Factory deleted!";
     }];
 
     _labelInterval = _display ctrlCreate ["RscText", 1002];
-    _labelInterval ctrlSetPosition [0.68, 0.82, 0.30, 0.025];
+    _labelInterval ctrlSetPosition [0.68, 0.56, 0.30, 0.025];
     _labelInterval ctrlSetText "Interval (minutes):";
     _labelInterval ctrlSetFontHeight 0.032;
     _labelInterval ctrlCommit 0;
 
     _inputInterval = _display ctrlCreate ["RscEdit", 1003];
-    _inputInterval ctrlSetPosition [0.68, 0.845, 0.30, 0.035];
+    _inputInterval ctrlSetPosition [0.68, 0.585, 0.30, 0.035];
     _inputInterval ctrlSetText "60";
     _inputInterval ctrlSetBackgroundColor [0.1, 0.1, 0.1, 1];
     _inputInterval ctrlSetFontHeight 0.032;
     _inputInterval ctrlCommit 0;
 
     _labelType = _display ctrlCreate ["RscText", 1008];
-    _labelType ctrlSetPosition [0.68, 0.885, 0.30, 0.022];
+    _labelType ctrlSetPosition [0.68, 0.625, 0.30, 0.022];
     _labelType ctrlSetText "Output Type:";
     _labelType ctrlSetFontHeight 0.03;
     _labelType ctrlCommit 0;
 
     _comboType = _display ctrlCreate ["RscCombo", 1009];
-    _comboType ctrlSetPosition [0.68, 0.907, 0.30, 0.035];
+    _comboType ctrlSetPosition [0.68, 0.647, 0.30, 0.035];
     _comboType lbAdd "Select Factory First";
     _comboType lbSetData [0, ""];
     _comboType lbSetCurSel 0;
@@ -1038,11 +981,12 @@ player addAction ["Open Crate Spawner", {
         CRATE_FACTORY_NEEDS_MAINTENANCE = [];
         CRATE_FACTORY_FIRES = [];
         CRATE_FACTORY_MORALE = [];
-        CRATE_FACTORY_REQUEST_PENDING = [];
-        CRATE_FACTORY_REQUEST_TYPE = [];
-        CRATE_FACTORY_REQUEST_AMOUNT = [];
-        CRATE_FACTORY_REQUEST_TIMER = [];
+        CRATE_FACTORY_TASK_PENDING = [];
+        CRATE_FACTORY_TASK_TYPE = [];
+        CRATE_FACTORY_TASK_OBJECTS = [];
+        CRATE_FACTORY_TASK_TIMER = [];
         CRATE_SELECTED_FACTORY = -1;
+        CRATE_HOVERED_FACTORY = -1;
         systemChat "All cleared!";
     }];
 
@@ -1067,48 +1011,19 @@ player addAction ["Open Crate Spawner", {
                 _factoryType = CRATE_FACTORY_TYPES select _selectedIndex;
                 _crateCount = CRATE_FACTORY_COUNTS select _selectedIndex;
                 _maxCrates = CRATE_FACTORY_MAXCRATES select _selectedIndex;
-                _food = CRATE_FACTORY_FOOD select _selectedIndex;
-                _water = CRATE_FACTORY_WATER select _selectedIndex;
-                _electricity = CRATE_FACTORY_ELECTRICITY select _selectedIndex;
-                _metal = CRATE_FACTORY_METAL select _selectedIndex;
-                _wood = CRATE_FACTORY_WOOD select _selectedIndex;
-                _coal = CRATE_FACTORY_COAL select _selectedIndex;
-                _needsMaint = CRATE_FACTORY_NEEDS_MAINTENANCE select _selectedIndex;
-                _timeRemaining = CRATE_FACTORY_TIMERS select _selectedIndex;
                 _script = CRATE_SPAWN_SCRIPTS select _selectedIndex;
                 _currentInterval = CRATE_FACTORY_INTERVALS select _selectedIndex;
                 _currentCrateType = CRATE_FACTORY_CRATETYPES select _selectedIndex;
-                _morale = CRATE_FACTORY_MORALE select _selectedIndex;
-                _hasPendingRequest = CRATE_FACTORY_REQUEST_PENDING select _selectedIndex;
-                _requestType = CRATE_FACTORY_REQUEST_TYPE select _selectedIndex;
-                _requestAmount = CRATE_FACTORY_REQUEST_AMOUNT select _selectedIndex;
 
                 _status = if (isNull _script) then {"<t color='#888'>OFF</t>"} else {"<t color='#0f0'>ON</t>"};
-                if (_needsMaint) then {_status = "<t color='#f00'>MAINT</t>"};
-                _timerDisplay = "";
-                if (_timeRemaining > 0) then {
-                    _m = floor (_timeRemaining / 60);
-                    _s = _timeRemaining mod 60;
-                    _timerDisplay = format ["<br/>Next: %1:%2", if (_m < 10) then {"0" + str _m} else {str _m}, if (_s < 10) then {"0" + str _s} else {str _s}];
-                };
+
                 _typeColor = "#0f0";
                 if (_factoryType == "Town") then {_typeColor = "#08f"};
                 if (_factoryType == "Powerplant") then {_typeColor = "#f80"};
                 if (_factoryType == "Vehicle") then {_typeColor = "#80f"};
                 if (_factoryType == "Pier") then {_typeColor = "#0cc"};
 
-                _moraleText = "Good";
-                _moraleColor = "#0f0";
-                if (_morale < 70) then {_moraleText = "OK"; _moraleColor = "#ff0"};
-                if (_morale < 40) then {_moraleText = "Low"; _moraleColor = "#f80"};
-                if (_morale < 30) then {_moraleText = "Bad"; _moraleColor = "#f00"};
-
-                _requestText = "";
-                if (_hasPendingRequest) then {
-                    _requestText = format ["<br/><t color='#f00'>REQ: %1x %2</t>", _requestAmount, _requestType];
-                };
-
-                _infoText = format ["<t size='1.2' color='%4'>%1 #%2</t><br/>%3<br/>Crates: %5/%6<br/>Morale: <t color='%8'>%7</t>%9%10", _factoryType, _selectedIndex + 1, _status, _typeColor, _crateCount, _maxCrates, _moraleText, _moraleColor, _requestText, _timerDisplay];
+                _infoText = format ["<t size='1.3' color='%4'>%1 #%2</t><br/>%3<br/>Crates: %5/%6", _factoryType, _selectedIndex + 1, _status, _typeColor, _crateCount, _maxCrates];
                 _infoBox ctrlSetStructuredText parseText _infoText;
                 if (_lastSelectedFactory != _selectedIndex) then {
                     _inputInterval ctrlSetText str _currentInterval;
@@ -1176,130 +1091,6 @@ player addAction ["Open Crate Spawner", {
                     };
                 };
                 _labelCost ctrlSetStructuredText parseText "";
-                _supplyBar = _display displayCtrl 1030;
-                _supplyLabel = _display displayCtrl 1031;
-                (_display displayCtrl 1033) ctrlShow false;
-                (_display displayCtrl 1034) ctrlShow false;
-                (_display displayCtrl 1035) ctrlShow false;
-                (_display displayCtrl 1038) ctrlShow false;
-                (_display displayCtrl 1039) ctrlShow false;
-                (_display displayCtrl 1040) ctrlShow false;
-                (_display displayCtrl 1041) ctrlShow false;
-                (_display displayCtrl 1042) ctrlShow false;
-                (_display displayCtrl 1043) ctrlShow false;
-                (_display displayCtrl 1044) ctrlShow false;
-                (_display displayCtrl 1045) ctrlShow false;
-                (_display displayCtrl 1046) ctrlShow false;
-                if (_factoryType == "Town") then {
-                    _barWidth = 0.30 * (_metal / 100);
-                    _supplyBar ctrlSetPosition [0.68, 0.505, _barWidth, 0.022];
-                    _supplyBar ctrlSetBackgroundColor [0.6, 0.6, 0.7, 1];
-                    _supplyBar ctrlCommit 0;
-                    _supplyLabel ctrlSetText format ["Metal (Boost): %1%% (x%2)", round _metal, (1 + (_metal / 100)) toFixed 1];
-                };
-                if (_factoryType == "Powerplant") then {
-                    _barWidth = 0.30 * (_coal / 100);
-                    _supplyBar ctrlSetPosition [0.68, 0.505, _barWidth, 0.022];
-                    _supplyBar ctrlSetBackgroundColor [0.3, 0.3, 0.3, 1];
-                    _supplyBar ctrlCommit 0;
-                    _supplyLabel ctrlSetText format ["Coal: %1%%", round _coal];
-                    _waterLabel = _display displayCtrl 1035;
-                    _waterBar = _display displayCtrl 1034;
-                    _waterBarBg = _display displayCtrl 1033;
-                    _waterBarWidth = 0.30 * (_water / 100);
-                    _waterBar ctrlSetPosition [0.68, 0.555, _waterBarWidth, 0.022];
-                    _waterBar ctrlSetBackgroundColor [0, 0.5, 1, 1];
-                    _waterBar ctrlCommit 0;
-                    _waterLabel ctrlSetText format ["Water: %1%%", round _water];
-                    _waterLabel ctrlShow true;
-                    _waterBarBg ctrlShow true;
-                    _waterBar ctrlShow true;
-                    _metalLabel = _display displayCtrl 1041;
-                    _metalBar = _display displayCtrl 1042;
-                    _metalBarBg = _display displayCtrl 1043;
-                    _metalBarWidth = 0.30 * (_metal / 100);
-                    _metalBar ctrlSetPosition [0.68, 0.605, _metalBarWidth, 0.022];
-                    _metalBar ctrlSetBackgroundColor [0.6, 0.6, 0.7, 1];
-                    _metalBar ctrlCommit 0;
-                    _metalLabel ctrlSetText format ["Metal (Boost): %1%% (x%2)", round _metal, (1 + (_metal / 100)) toFixed 1];
-                    _metalLabel ctrlShow true;
-                    _metalBarBg ctrlShow true;
-                    _metalBar ctrlShow true;
-                };
-                if (_factoryType == "Vehicle") then {
-                    _barWidth = 0.30 * (_electricity / 100);
-                    _supplyBar ctrlSetPosition [0.68, 0.505, _barWidth, 0.022];
-                    _supplyBar ctrlSetBackgroundColor [1, 1, 0, 1];
-                    _supplyBar ctrlCommit 0;
-                    _supplyLabel ctrlSetText format ["Electricity: %1%%", round _electricity];
-                    _metalLabel = _display displayCtrl 1041;
-                    _metalBar = _display displayCtrl 1042;
-                    _metalBarBg = _display displayCtrl 1043;
-                    _metalBarWidth = 0.30 * (_metal / 100);
-                    _metalBar ctrlSetPosition [0.68, 0.555, _metalBarWidth, 0.022];
-                    _metalBar ctrlSetBackgroundColor [0.6, 0.6, 0.7, 1];
-                    _metalBar ctrlCommit 0;
-                    _metalLabel ctrlSetText format ["Metal: %1%%", round _metal];
-                    _metalLabel ctrlShow true;
-                    _metalBarBg ctrlShow true;
-                    _metalBar ctrlShow true;
-                };
-                if (_factoryType == "Mineral" || _factoryType == "Pier") then {
-                    _barWidth = 0.30 * (_food / 100);
-                    _supplyBar ctrlSetPosition [0.68, 0.505, _barWidth, 0.022];
-                    _supplyBar ctrlSetBackgroundColor [0, 0.8, 0, 1];
-                    _supplyBar ctrlCommit 0;
-                    _supplyLabel ctrlSetText format ["Food: %1%%", round _food];
-                    _waterLabel = _display displayCtrl 1035;
-                    _waterBar = _display displayCtrl 1034;
-                    _waterBarBg = _display displayCtrl 1033;
-                    _waterBarWidth = 0.30 * (_water / 100);
-                    _waterBar ctrlSetPosition [0.68, 0.555, _waterBarWidth, 0.022];
-                    _waterBar ctrlSetBackgroundColor [0, 0.5, 1, 1];
-                    _waterBar ctrlCommit 0;
-                    _waterLabel ctrlSetText format ["Water: %1%%", round _water];
-                    _waterLabel ctrlShow true;
-                    _waterBarBg ctrlShow true;
-                    _waterBar ctrlShow true;
-                    _woodLabel = _display displayCtrl 1044;
-                    _woodBar = _display displayCtrl 1045;
-                    _woodBarBg = _display displayCtrl 1046;
-                    _woodBarWidth = 0.30 * (_wood / 100);
-                    _woodBar ctrlSetPosition [0.68, 0.605, _woodBarWidth, 0.022];
-                    _woodBar ctrlSetBackgroundColor [0.6, 0.4, 0.2, 1];
-                    _woodBar ctrlCommit 0;
-                    _woodLabel ctrlSetText format ["Wood: %1%%", round _wood];
-                    _woodLabel ctrlShow true;
-                    _woodBarBg ctrlShow true;
-                    _woodBar ctrlShow true;
-                    _metalLabel = _display displayCtrl 1041;
-                    _metalBar = _display displayCtrl 1042;
-                    _metalBarBg = _display displayCtrl 1043;
-                    _metalBarWidth = 0.30 * (_metal / 100);
-                    _metalBar ctrlSetPosition [0.68, 0.655, _metalBarWidth, 0.022];
-                    _metalBar ctrlSetBackgroundColor [0.6, 0.6, 0.7, 1];
-                    _metalBar ctrlCommit 0;
-                    if (_factoryType == "Pier") then {
-                        _metalLabel ctrlSetText format ["Metal: %1%%", round _metal];
-                    } else {
-                        _metalLabel ctrlSetText format ["Metal (Boost): %1%%", round _metal];
-                    };
-                    _metalLabel ctrlShow true;
-                    _metalBarBg ctrlShow true;
-                    _metalBar ctrlShow true;
-                    _electricityLabel = _display displayCtrl 1038;
-                    _electricityBar = _display displayCtrl 1040;
-                    _electricityBarBg = _display displayCtrl 1039;
-                    _electricityBarWidth = 0.30 * (_electricity / 100);
-                    _electricityBar ctrlSetPosition [0.68, 0.705, _electricityBarWidth, 0.022];
-                    _electricityBar ctrlSetBackgroundColor [1, 1, 0, 1];
-                    _electricityBar ctrlCommit 0;
-                    _combinedBoost = 1 + ((_electricity + _metal) / 200);
-                    _electricityLabel ctrlSetText format ["Elec (Boost): %1%% (x%2)", round _electricity, _combinedBoost toFixed 1];
-                    _electricityLabel ctrlShow true;
-                    _electricityBarBg ctrlShow true;
-                    _electricityBar ctrlShow true;
-                };
             } else {
                 _infoBox ctrlSetStructuredText parseText "<t size='1.2'>No Factory</t><br/><br/>Click factory<br/>or click empty area";
                 _inputInterval ctrlSetText "60";
@@ -1377,4 +1168,4 @@ player addAction ["Open Crate Spawner", {
     };
 }];
 
-systemChat "Crate Spawner action added!";
+systemChat "Factory Manager loaded! Hover over factories for info.";
