@@ -50,11 +50,13 @@ player addAction ["Open Crate Spawner", {
 
     _map ctrlAddEventHandler ["MouseMoving", {
         params ["_control", "_xPos", "_yPos"];
-        _worldPos = _control ctrlMapScreenToWorld [_xPos, _yPos];
         _hoveredFactory = -1;
         {
-            _dist = _worldPos distance2D _x;
-            if (_dist < 100) then {_hoveredFactory = _forEachIndex};
+            _factoryScreenPos = _control ctrlMapWorldToScreen _x;
+            if (count _factoryScreenPos > 0) then {
+                _screenDist = sqrt (((_factoryScreenPos select 0) - _xPos) ^ 2 + ((_factoryScreenPos select 1) - _yPos) ^ 2);
+                if (_screenDist < 0.05) then {_hoveredFactory = _forEachIndex};
+            };
         } forEach CRATE_FACTORY_POSITIONS;
         CRATE_HOVERED_FACTORY = _hoveredFactory;
     }];
