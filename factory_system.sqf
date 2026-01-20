@@ -282,8 +282,15 @@ player addAction ["Open Crate Spawner", {
                 if (_townCount >= 2) then {_metalCost = 1 + floor(_townCount / 2)};
                 _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
                 _nearMetalCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
-                if (count _nearWoodCrates < _woodCost) exitWith {systemChat format ["Need %1x Wood! (Found:%2)", _woodCost, count _nearWoodCrates]};
-                if (_metalCost > 0 && count _nearMetalCrates < _metalCost) exitWith {systemChat format ["Need %1x Metal! (Found:%2)", _metalCost, count _nearMetalCrates]};
+
+                _missingResources = [];
+                if (count _nearWoodCrates < _woodCost) then {_missingResources pushBack format ["Wood: need %1, found %2", _woodCost, count _nearWoodCrates]};
+                if (_metalCost > 0 && count _nearMetalCrates < _metalCost) then {_missingResources pushBack format ["Metal: need %1, found %2", _metalCost, count _nearMetalCrates]};
+
+                if (count _missingResources > 0) exitWith {
+                    systemChat format ["Missing resources: %1", _missingResources joinString " | "];
+                };
+
                 for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
                 if (_metalCost > 0) then {
                     for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetalCrates select _i)};
@@ -305,9 +312,16 @@ player addAction ["Open Crate Spawner", {
             _nearFoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
             _nearWaterCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
-            if (count _nearFoodCrates < _foodCost) exitWith {systemChat format ["Need %1x Food! (Found:%2)", _foodCost, count _nearFoodCrates]};
-            if (count _nearWaterCrates < _waterCost) exitWith {systemChat format ["Need %1x Water! (Found:%2)", _waterCost, count _nearWaterCrates]};
-            if (count _nearWoodCrates < _woodCost) exitWith {systemChat format ["Need %1x Wood! (Found:%2)", _woodCost, count _nearWoodCrates]};
+
+            _missingResources = [];
+            if (count _nearFoodCrates < _foodCost) then {_missingResources pushBack format ["Food: need %1, found %2", _foodCost, count _nearFoodCrates]};
+            if (count _nearWaterCrates < _waterCost) then {_missingResources pushBack format ["Water: need %1, found %2", _waterCost, count _nearWaterCrates]};
+            if (count _nearWoodCrates < _woodCost) then {_missingResources pushBack format ["Wood: need %1, found %2", _woodCost, count _nearWoodCrates]};
+
+            if (count _missingResources > 0) exitWith {
+                systemChat format ["Missing resources: %1", _missingResources joinString " | "];
+            };
+
             for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFoodCrates select _i)};
             for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWaterCrates select _i)};
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
@@ -323,9 +337,16 @@ player addAction ["Open Crate Spawner", {
             _nearCoalCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_closed_F"], 100];
             _nearMetalCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
             _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
-            if (count _nearCoalCrates < _coalCost) exitWith {systemChat format ["Need %1x Coal! (Found:%2)", _coalCost, count _nearCoalCrates]};
-            if (count _nearMetalCrates < _metalCost) exitWith {systemChat format ["Need %1x Metal! (Found:%2)", _metalCost, count _nearMetalCrates]};
-            if (count _nearWoodCrates < _woodCost) exitWith {systemChat format ["Need %1x Wood! (Found:%2)", _woodCost, count _nearWoodCrates]};
+
+            _missingResources = [];
+            if (count _nearCoalCrates < _coalCost) then {_missingResources pushBack format ["Coal: need %1, found %2", _coalCost, count _nearCoalCrates]};
+            if (count _nearMetalCrates < _metalCost) then {_missingResources pushBack format ["Metal: need %1, found %2", _metalCost, count _nearMetalCrates]};
+            if (count _nearWoodCrates < _woodCost) then {_missingResources pushBack format ["Wood: need %1, found %2", _woodCost, count _nearWoodCrates]};
+
+            if (count _missingResources > 0) exitWith {
+                systemChat format ["Missing resources: %1", _missingResources joinString " | "];
+            };
+
             for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoalCrates select _i)};
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetalCrates select _i)};
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
@@ -341,9 +362,16 @@ player addAction ["Open Crate Spawner", {
             _nearEnergyCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PortableServer_01_sand_F"], 100];
             _nearMetalCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
             _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
-            if (count _nearEnergyCrates < _energyCost) exitWith {systemChat format ["Need %1x Energy! (Found:%2)", _energyCost, count _nearEnergyCrates]};
-            if (count _nearMetalCrates < _metalCost) exitWith {systemChat format ["Need %1x Metal! (Found:%2)", _metalCost, count _nearMetalCrates]};
-            if (count _nearWoodCrates < _woodCost) exitWith {systemChat format ["Need %1x Wood! (Found:%2)", _woodCost, count _nearWoodCrates]};
+
+            _missingResources = [];
+            if (count _nearEnergyCrates < _energyCost) then {_missingResources pushBack format ["Energy: need %1, found %2", _energyCost, count _nearEnergyCrates]};
+            if (count _nearMetalCrates < _metalCost) then {_missingResources pushBack format ["Metal: need %1, found %2", _metalCost, count _nearMetalCrates]};
+            if (count _nearWoodCrates < _woodCost) then {_missingResources pushBack format ["Wood: need %1, found %2", _woodCost, count _nearWoodCrates]};
+
+            if (count _missingResources > 0) exitWith {
+                systemChat format ["Missing resources: %1", _missingResources joinString " | "];
+            };
+
             for "_i" from 0 to (_energyCost - 1) do {deleteVehicle (_nearEnergyCrates select _i)};
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetalCrates select _i)};
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
@@ -359,9 +387,16 @@ player addAction ["Open Crate Spawner", {
             _nearFoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
             _nearWaterCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
-            if (count _nearFoodCrates < _foodCost) exitWith {systemChat format ["Need %1x Food! (Found:%2)", _foodCost, count _nearFoodCrates]};
-            if (count _nearWaterCrates < _waterCost) exitWith {systemChat format ["Need %1x Water! (Found:%2)", _waterCost, count _nearWaterCrates]};
-            if (count _nearWoodCrates < _woodCost) exitWith {systemChat format ["Need %1x Wood! (Found:%2)", _woodCost, count _nearWoodCrates]};
+
+            _missingResources = [];
+            if (count _nearFoodCrates < _foodCost) then {_missingResources pushBack format ["Food: need %1, found %2", _foodCost, count _nearFoodCrates]};
+            if (count _nearWaterCrates < _waterCost) then {_missingResources pushBack format ["Water: need %1, found %2", _waterCost, count _nearWaterCrates]};
+            if (count _nearWoodCrates < _woodCost) then {_missingResources pushBack format ["Wood: need %1, found %2", _woodCost, count _nearWoodCrates]};
+
+            if (count _missingResources > 0) exitWith {
+                systemChat format ["Missing resources: %1", _missingResources joinString " | "];
+            };
+
             for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFoodCrates select _i)};
             for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWaterCrates select _i)};
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWoodCrates select _i)};
