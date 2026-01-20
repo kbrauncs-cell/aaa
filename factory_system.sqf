@@ -45,25 +45,7 @@ player addAction ["Open Crate Spawner", {
     if (isNil "CRATE_FACTORY_TASK_TYPE") then {CRATE_FACTORY_TASK_TYPE = []};
     if (isNil "CRATE_FACTORY_TASK_ID") then {CRATE_FACTORY_TASK_ID = []};
     if (isNil "CRATE_FACTORY_TASK_TIMER") then {CRATE_FACTORY_TASK_TIMER = []};
-    if (isNil "CRATE_HOVERED_FACTORY") then {CRATE_HOVERED_FACTORY = -1};
     if (isNil "CRATE_FACTORY_OPFOR_SPAWNED") then {CRATE_FACTORY_OPFOR_SPAWNED = []};
-
-    _map ctrlAddEventHandler ["MouseMoving", {
-        params ["_control", "_xPos", "_yPos"];
-        _hoveredFactory = -1;
-        {
-            _factoryScreenPos = _control ctrlMapWorldToScreen _x;
-            if (count _factoryScreenPos > 0) then {
-                _factoryX = _factoryScreenPos select 0;
-                _factoryY = _factoryScreenPos select 1;
-                _screenDist = sqrt (((_factoryX - _xPos) ^ 2) + ((_factoryY - _yPos) ^ 2));
-                if (_screenDist < 0.15) then {
-                    _hoveredFactory = _forEachIndex;
-                };
-            };
-        } forEach CRATE_FACTORY_POSITIONS;
-        CRATE_HOVERED_FACTORY = _hoveredFactory;
-    }];
 
     _map ctrlAddEventHandler ["MouseButtonDown", {
         params ["_control", "_button", "_xPos", "_yPos"];
@@ -142,9 +124,9 @@ player addAction ["Open Crate Spawner", {
                     };
                 };
 
-                _tooltipPos = [(_x select 0) + 0.002, (_x select 1) + 0.002];
+                _tooltipPos = [(_x select 0), (_x select 1) - 0.003];
                 _tooltipText = format ["%1 #%2\nMorale: %3%4%5", _factoryType, _forEachIndex + 1, _moraleText, _taskText, _resourceText];
-                _control drawIcon ["", _moraleColor, _tooltipPos, 0, 0, 0, _tooltipText, 2, 0.045, "PuristaMedium", "left"];
+                _control drawIcon ["", _moraleColor, _tooltipPos, 0, 0, 0, _tooltipText, 2, 0.06, "PuristaMedium", "center"];
             };
         } forEach CRATE_FACTORY_POSITIONS;
     }];
