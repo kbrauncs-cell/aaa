@@ -46,6 +46,12 @@ player addAction ["Open Crate Spawner", {
     if (isNil "CRATE_FACTORY_TASK_ID") then {CRATE_FACTORY_TASK_ID = []};
     if (isNil "CRATE_FACTORY_TASK_TIMER") then {CRATE_FACTORY_TASK_TIMER = []};
     if (isNil "CRATE_FACTORY_OPFOR_SPAWNED") then {CRATE_FACTORY_OPFOR_SPAWNED = []};
+    if (isNil "CRATE_MOUSE_POS") then {CRATE_MOUSE_POS = []};
+
+    _map ctrlAddEventHandler ["MouseMoving", {
+        params ["_control", "_xPos", "_yPos"];
+        CRATE_MOUSE_POS = [_xPos, _yPos];
+    }];
 
     _map ctrlAddEventHandler ["MouseButtonDown", {
         params ["_control", "_button", "_xPos", "_yPos"];
@@ -69,6 +75,23 @@ player addAction ["Open Crate Spawner", {
     _map ctrlAddEventHandler ["Draw", {
         params ["_control"];
 
+        _hoveredFactory = -1;
+        if (count CRATE_MOUSE_POS == 2) then {
+            _mouseX = CRATE_MOUSE_POS select 0;
+            _mouseY = CRATE_MOUSE_POS select 1;
+            {
+                _factoryScreenPos = _control ctrlMapWorldToScreen _x;
+                if (count _factoryScreenPos > 0) then {
+                    _factoryX = _factoryScreenPos select 0;
+                    _factoryY = _factoryScreenPos select 1;
+                    _dist = sqrt (((_factoryX - _mouseX) ^ 2) + ((_factoryY - _mouseY) ^ 2));
+                    if (_dist < 0.1) then {
+                        _hoveredFactory = _forEachIndex;
+                    };
+                };
+            } forEach CRATE_FACTORY_POSITIONS;
+        };
+
         if (count CRATE_PENDING_LOCATION > 0) then {
             _control drawIcon ["\a3\ui_f\data\map\markers\military\circle_CA.paa",[1, 1, 0, 0.7],CRATE_PENDING_LOCATION,40,40,0,"SPAWN",1,0.05,"PuristaMedium","center"];
         };
@@ -82,43 +105,49 @@ player addAction ["Open Crate Spawner", {
             if (_forEachIndex == CRATE_SELECTED_FACTORY) then {
                 _control drawEllipse [_x, 70, 70, 0, [1, 1, 0, 1], "#(rgb,1,1,1)color(0,0,0,0)"];
             };
-            _morale = CRATE_FACTORY_MORALE select _forEachIndex;
-            _moraleText = "Good";
-            _moraleColor = [0, 1, 0, 1];
-            if (_morale < 70) then {_moraleText = "OK"; _moraleColor = [1, 1, 0, 1]};
-            if (_morale < 40) then {_moraleText = "Low"; _moraleColor = [1, 0.5, 0, 1]};
-            if (_morale < 30) then {_moraleText = "Bad"; _moraleColor = [1, 0, 0, 1]};
 
-            _taskPending = CRATE_FACTORY_TASK_PENDING select _forEachIndex;
-            _taskType = CRATE_FACTORY_TASK_TYPE select _forEachIndex;
-            _taskText = "";
-            if (_taskPending) then {
-                _taskText = format [" | Task:%1", _taskType];
-            };
+            _control drawIcon ["\a3\ui_f\data\map\markers\nato\b_installation.paa",_color,_x,35,35,0,format ["F%1", _forEachIndex + 1],1,0.05,"PuristaMedium","right"];
 
-            _food = CRATE_FACTORY_FOOD select _forEachIndex;
-            _water = CRATE_FACTORY_WATER select _forEachIndex;
-            _wood = CRATE_FACTORY_WOOD select _forEachIndex;
-            _metal = CRATE_FACTORY_METAL select _forEachIndex;
-            _coal = CRATE_FACTORY_COAL select _forEachIndex;
-            _elec = CRATE_FACTORY_ELECTRICITY select _forEachIndex;
+            if (_forEachIndex == _hoveredFactory) then {
+                _morale = CRATE_FACTORY_MORALE select _forEachIndex;
+                _moraleText = "Good";
+                if (_morale < 70) then {_moraleText = "OK"};
+                if (_morale < 40) then {_moraleText = "Low"};
+                if (_morale < 30) then {_moraleText = "Bad"};
 
-            _resourceText = "";
-            if (_factoryType == "Town") then {
-                _resourceText = format [" | M:%1%%", round _metal];
-            };
-            if (_factoryType == "Powerplant") then {
-                _resourceText = format [" | C:%1%% W:%2%% M:%3%%", round _coal, round _water, round _metal];
-            };
-            if (_factoryType == "Vehicle") then {
-                _resourceText = format [" | E:%1%% M:%2%%", round _elec, round _metal];
-            };
-            if (_factoryType == "Mineral" || _factoryType == "Pier") then {
-                _resourceText = format [" | F:%1%% W:%2%% Wd:%3%%", round _food, round _water, round _wood];
-            };
+                _taskPending = CRATE_FACTORY_TASK_PENDING select _forEachIndex;
+                _taskType = CRATE_FACTORY_TASK_TYPE select _forEachIndex;
+                _taskText = "";
+                if (_taskPending) then {
+                    _taskText = format [" | Task: %1", _taskType];
+                };
 
-            _labelText = format ["F%1:%2(%3)%4%5", _forEachIndex + 1, _factoryType, _moraleText, _taskText, _resourceText];
-            _control drawIcon ["\a3\ui_f\data\map\markers\nato\b_installation.paa",_color,_x,35,35,0,_labelText,1,0.04,"PuristaMedium","right"];
+                _food = CRATE_FACTORY_FOOD select _forEachIndex;
+                _water = CRATE_FACTORY_WATER select _forEachIndex;
+                _wood = CRATE_FACTORY_WOOD select _forEachIndex;
+                _metal = CRATE_FACTORY_METAL select _forEachIndex;
+                _coal = CRATE_FACTORY_COAL select _forEachIndex;
+                _elec = CRATE_FACTORY_ELECTRICITY select _forEachIndex;
+
+                _resourceText = "";
+                if (_factoryType == "Town") then {
+                    _resourceText = format [" | Metal: %1%%", round _metal];
+                };
+                if (_factoryType == "Powerplant") then {
+                    _resourceText = format [" | Coal: %1%% Water: %2%% Metal: %3%%", round _coal, round _water, round _metal];
+                };
+                if (_factoryType == "Vehicle") then {
+                    _resourceText = format [" | Elec: %1%% Metal: %2%%", round _elec, round _metal];
+                };
+                if (_factoryType == "Mineral" || _factoryType == "Pier") then {
+                    _resourceText = format [" | Food: %1%% Water: %2%% Wood: %3%%", round _food, round _water, round _wood];
+                };
+
+                _tooltipWorldPos = [(_x select 0), (_x select 1) + 0.005];
+                _tooltipText = format ["%1 #%2 | Morale: %3%4%5", _factoryType, _forEachIndex + 1, _moraleText, _taskText, _resourceText];
+                _control drawRectangle [_tooltipWorldPos, 0.015, 0.005, 0, [0, 0, 0, 0.8], "#(rgb,1,1,1)color(1,1,1,1)"];
+                _control drawIcon ["", [1, 1, 1, 1], _tooltipWorldPos, 0, 0, 0, _tooltipText, 2, 0.04, "PuristaMedium", "center"];
+            };
         } forEach CRATE_FACTORY_POSITIONS;
     }];
 
