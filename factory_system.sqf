@@ -54,7 +54,7 @@ player addAction ["Open Crate Spawner", {
         _hoveredFactory = -1;
         {
             _dist = _worldPos distance2D _x;
-            if (_dist < 50) then {_hoveredFactory = _forEachIndex};
+            if (_dist < 100) then {_hoveredFactory = _forEachIndex};
         } forEach CRATE_FACTORY_POSITIONS;
         CRATE_HOVERED_FACTORY = _hoveredFactory;
     }];
@@ -135,9 +135,9 @@ player addAction ["Open Crate Spawner", {
                     };
                 };
 
-                _tooltipPos = [(_x select 0) + 0.001, (_x select 1) + 0.001];
+                _tooltipPos = [(_x select 0) + 0.002, (_x select 1) + 0.002];
                 _tooltipText = format ["%1 #%2\nMorale: %3%4%5", _factoryType, _forEachIndex + 1, _moraleText, _taskText, _resourceText];
-                _control drawIcon ["", _moraleColor, _tooltipPos, 0, 0, 0, _tooltipText, 2, 0.035, "PuristaMedium", "left"];
+                _control drawIcon ["", _moraleColor, _tooltipPos, 0, 0, 0, _tooltipText, 2, 0.045, "PuristaMedium", "left"];
             };
         } forEach CRATE_FACTORY_POSITIONS;
     }];
@@ -148,7 +148,7 @@ player addAction ["Open Crate Spawner", {
     _settingsBg ctrlCommit 0;
 
     _infoBox = _display ctrlCreate ["RscStructuredText", 1050];
-    _infoBox ctrlSetPosition [0.68, 0.09, 0.30, 0.10];
+    _infoBox ctrlSetPosition [0.68, 0.09, 0.30, 0.12];
     _infoBox ctrlSetBackgroundColor [0.1, 0.1, 0.1, 1];
     _infoBox ctrlCommit 0;
 
@@ -176,7 +176,7 @@ player addAction ["Open Crate Spawner", {
     _comboFactoryType ctrlCommit 0;
 
     _labelCost = _display ctrlCreate ["RscStructuredText", 1051];
-    _labelCost ctrlSetPosition [0.68, 0.26, 0.30, 0.13];
+    _labelCost ctrlSetPosition [0.68, 0.26, 0.30, 0.15];
     _labelCost ctrlSetBackgroundColor [0.1, 0.1, 0.1, 1];
     _labelCost ctrlCommit 0;
 
@@ -244,7 +244,7 @@ player addAction ["Open Crate Spawner", {
     }];
 
     _btnSpawnFactory = _display ctrlCreate ["RscButton", 1025];
-    _btnSpawnFactory ctrlSetPosition [0.68, 0.39, 0.30, 0.04];
+    _btnSpawnFactory ctrlSetPosition [0.68, 0.42, 0.30, 0.04];
     _btnSpawnFactory ctrlSetText "SPAWN FACTORY";
     _btnSpawnFactory ctrlSetBackgroundColor [0, 0.4, 0.7, 1];
     _btnSpawnFactory ctrlSetFontHeight 0.032;
