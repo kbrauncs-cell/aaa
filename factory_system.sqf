@@ -86,6 +86,25 @@ player addAction ["Open Crate Spawner", {
 
     _map ctrlAddEventHandler ["Draw", {
         params ["_control"];
+
+        _mousePos = _control getMousePosition;
+        _hoveredFactory = -1;
+        if (count _mousePos == 2) then {
+            {
+                _factoryScreenPos = _control ctrlMapWorldToScreen _x;
+                if (count _factoryScreenPos > 0) then {
+                    _factoryX = _factoryScreenPos select 0;
+                    _factoryY = _factoryScreenPos select 1;
+                    _mouseX = _mousePos select 0;
+                    _mouseY = _mousePos select 1;
+                    _screenDist = sqrt (((_factoryX - _mouseX) ^ 2) + ((_factoryY - _mouseY) ^ 2));
+                    if (_screenDist < 0.08) then {
+                        _hoveredFactory = _forEachIndex;
+                    };
+                };
+            } forEach CRATE_FACTORY_POSITIONS;
+        };
+
         if (count CRATE_PENDING_LOCATION > 0) then {
             _control drawIcon ["\a3\ui_f\data\map\markers\military\circle_CA.paa",[1, 1, 0, 0.7],CRATE_PENDING_LOCATION,40,40,0,"SPAWN",1,0.05,"PuristaMedium","center"];
         };
@@ -101,7 +120,7 @@ player addAction ["Open Crate Spawner", {
             };
             _control drawIcon ["\a3\ui_f\data\map\markers\nato\b_installation.paa",_color,_x,35,35,0,format ["F%1", _forEachIndex + 1],1,0.05,"PuristaMedium","right"];
 
-            if (_forEachIndex == CRATE_HOVERED_FACTORY) then {
+            if (_forEachIndex == _hoveredFactory) then {
                 _morale = CRATE_FACTORY_MORALE select _forEachIndex;
                 _moraleText = "Good";
                 _moraleColor = [0, 1, 0, 1];
