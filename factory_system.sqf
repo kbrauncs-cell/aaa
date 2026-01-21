@@ -923,7 +923,7 @@ player addAction ["Open Crate Spawner", {
                                 [_crate, 0, ["ACE_MainActions"],
                                     ["OpenInventory", "Open Food Storage", "",
                                     {params ["_target"]; _box = _target getVariable ["inventoryBox", objNull]; if (!isNull _box) then {player action ["Gear", _box]}},
-                                    {true}]
+                                    {true}, {}, [], [0,0,0], 5, [false,false,false,false,false], {}]
                                 ] call ace_interact_menu_fnc_addActionToObject;
                                 FOOD_WATER_CRATES pushBack _crate;
                             };
@@ -941,7 +941,7 @@ player addAction ["Open Crate Spawner", {
                                 [_crate, 0, ["ACE_MainActions"],
                                     ["OpenInventory", "Open Water Storage", "",
                                     {params ["_target"]; _box = _target getVariable ["inventoryBox", objNull]; if (!isNull _box) then {player action ["Gear", _box]}},
-                                    {true}]
+                                    {true}, {}, [], [0,0,0], 5, [false,false,false,false,false], {}]
                                 ] call ace_interact_menu_fnc_addActionToObject;
                                 FOOD_WATER_CRATES pushBack _crate;
                             };
