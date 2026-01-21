@@ -105,7 +105,18 @@ player addAction ["Open Crate Spawner", {
                 _resourceInfo = format ["\nFood: %1%% | Water: %2%% | Wood: %3%%", round _food, round _water, round _wood];
             };
 
-            _hintText = format ["%1 Factory #%2\nMorale: %3%4%5", _factoryType, _hoveredFactory + 1, _moraleText, _taskInfo, _resourceInfo];
+            _timerInfo = "";
+            _script = CRATE_SPAWN_SCRIPTS select _hoveredFactory;
+            if (!isNull _script) then {
+                _timeLeft = CRATE_FACTORY_TIMERS select _hoveredFactory;
+                _minutes = floor(_timeLeft / 60);
+                _seconds = floor(_timeLeft mod 60);
+                _timerInfo = format ["\nNext: %1:%2", _minutes, if (_seconds < 10) then {"0" + str _seconds} else {str _seconds}];
+            } else {
+                _timerInfo = "\nStatus: OFF";
+            };
+
+            _hintText = format ["%1 Factory #%2\nMorale: %3%4%5%6", _factoryType, _hoveredFactory + 1, _moraleText, _taskInfo, _resourceInfo, _timerInfo];
             hintSilent _hintText;
         } else {
             hintSilent "";
