@@ -270,8 +270,8 @@ player addAction ["Open Crate Spawner", {
                 _costMessage = "Cost: FREE (First town factory)";
             } else {
                 _foodCost = 3; _waterCost = 3; _woodCost = 5;
-                _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_AmmoVeh_F"], 100];
-                _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_Wps_F"], 100];
+                _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
+                _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
                 _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
 
                 _missingResources = [];
@@ -293,8 +293,8 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Mineral") then {
             _foodCost = 8; _waterCost = 10; _woodCost = 15;
-            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_AmmoVeh_F"], 100];
-            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_Wps_F"], 100];
+            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
+            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
 
             _missingResources = [];
@@ -315,8 +315,8 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Powerplant") then {
             _foodCost = 10; _waterCost = 10; _woodCost = 15; _metalCost = 15; _coalCost = 20; _ironCost = 5; _fishCost = 5;
-            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_AmmoVeh_F"], 100];
-            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_Wps_F"], 100];
+            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
+            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
             _nearMetal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
             _nearCoal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_closed_F"], 100];
@@ -349,8 +349,8 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Vehicle") then {
             _foodCost = 12; _waterCost = 12; _woodCost = 20; _metalCost = 30; _coalCost = 15; _energyCost = 25; _ironCost = 10; _diamondCost = 5; _fishCost = 8; _oilCost = 8; _goldCost = 5; _electronicsCost = 10;
-            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_AmmoVeh_F"], 100];
-            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_Wps_F"], 100];
+            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
+            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
             _nearMetal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
             _nearCoal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_closed_F"], 100];
@@ -398,8 +398,8 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Pier") then {
             _foodCost = 10; _waterCost = 12; _woodCost = 18;
-            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_AmmoVeh_F"], 100];
-            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_Wps_F"], 100];
+            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
+            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
 
             _missingResources = [];
@@ -522,8 +522,8 @@ player addAction ["Open Crate Spawner", {
             if (_nextLevel == 5) then {_foodCost = 45; _waterCost = 45; _woodCost = 50; _metalCost = 50; _coalCost = 30; _energyCost = 40; _ironCost = 25; _diamondCost = 15; _goldCost = 20; _oilCost = 20; _electronicsCost = 25; _fuelTankCost = 12; _wheelCost = 12; _enginePartCost = 12};
         };
 
-        _nearFood = nearestObjects [_factoryPos, ["Box_IND_AmmoVeh_F"], 50];
-        _nearWater = nearestObjects [_factoryPos, ["Box_IND_Wps_F"], 50];
+        _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
+        _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
         _nearWood = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 50];
         _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
         _nearCoal = nearestObjects [_factoryPos, ["Land_PaperBox_closed_F"], 50];
@@ -614,8 +614,8 @@ player addAction ["Open Crate Spawner", {
             _waterCost = _baseCost + floor(random 3);
             _woodCost = _baseCost + floor(random 3);
             _elecCost = _baseCost + floor(random 2);
-            _nearFood = nearestObjects [_factoryPos, ["Box_IND_AmmoVeh_F"], 50];
-            _nearWater = nearestObjects [_factoryPos, ["Box_IND_Wps_F"], 50];
+            _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
+            _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
             _nearWood = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 50];
             _nearElec = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 50];
             _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
@@ -643,8 +643,16 @@ player addAction ["Open Crate Spawner", {
                 systemChat ("Missing: " + (_missingResources joinString " | "));
             };
 
-            {deleteVehicle _x} forEach _nearFood;
-            {deleteVehicle _x} forEach _nearWater;
+            {
+                _invBox = _x getVariable ["inventoryBox", objNull];
+                if (!isNull _invBox) then {deleteVehicle _invBox};
+                deleteVehicle _x;
+            } forEach _nearFood;
+            {
+                _invBox = _x getVariable ["inventoryBox", objNull];
+                if (!isNull _invBox) then {deleteVehicle _invBox};
+                deleteVehicle _x;
+            } forEach _nearWater;
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWood select _i)};
             for "_i" from 0 to (_elecCost - 1) do {deleteVehicle (_nearElec select _i)};
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
@@ -662,7 +670,7 @@ player addAction ["Open Crate Spawner", {
             _coalCost = _baseCost + 2 + floor(random 3);
             _waterCost = _baseCost + floor(random 3);
             _nearCoal = nearestObjects [_factoryPos, ["Land_PaperBox_closed_F"], 50];
-            _nearWater = nearestObjects [_factoryPos, ["Box_IND_Wps_F"], 50];
+            _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
             _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
 
             _waterValue = 0;
@@ -681,7 +689,11 @@ player addAction ["Open Crate Spawner", {
             };
 
             for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoal select _i)};
-            {deleteVehicle _x} forEach _nearWater;
+            {
+                _invBox = _x getVariable ["inventoryBox", objNull];
+                if (!isNull _invBox) then {deleteVehicle _invBox};
+                deleteVehicle _x;
+            } forEach _nearWater;
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
 
             CRATE_FACTORY_COAL set [_selectedIndex, 100];
@@ -897,22 +909,40 @@ player addAction ["Open Crate Spawner", {
                             _crate = _crateType createVehicle _spawnPos;
                             _crate setPos _spawnPos;
 
-                            if (_crateType == "Box_IND_AmmoVeh_F") then {
-                                clearItemCargoGlobal _crate;
-                                _crate addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", 250];
+                            if (_crateType == "Land_FoodSacks_01_large_white_idap_F") then {
+                                _inventoryBox = "Box_IND_AmmoVeh_F" createVehicle _spawnPos;
+                                _inventoryBox attachTo [_crate, [0, 0, 0]];
+                                hideObjectGlobal _inventoryBox;
+                                clearItemCargoGlobal _inventoryBox;
+                                _inventoryBox addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", 250];
+                                _crate setVariable ["inventoryBox", _inventoryBox, true];
                                 _crate setVariable ["crateItemCount", 250, true];
                                 _crate setVariable ["crateItemType", "food", true];
                                 _crate setVariable ["droppedItems", [], true];
                                 _crate setVariable ["nextDropTime", time + (300 + random 600), true];
+                                [_crate, 0, ["ACE_MainActions"],
+                                    ["OpenInventory", "Open Food Storage", "",
+                                    {params ["_target"]; _box = _target getVariable ["inventoryBox", objNull]; if (!isNull _box) then {player action ["Gear", _box]}},
+                                    {true}]
+                                ] call ace_interact_menu_fnc_addActionToObject;
                                 FOOD_WATER_CRATES pushBack _crate;
                             };
-                            if (_crateType == "Box_IND_Wps_F") then {
-                                clearItemCargoGlobal _crate;
-                                _crate addItemCargoGlobal ["ACE_WaterBottle", 250];
+                            if (_crateType == "Land_PaperBox_01_open_water_F") then {
+                                _inventoryBox = "Box_IND_Wps_F" createVehicle _spawnPos;
+                                _inventoryBox attachTo [_crate, [0, 0, 0]];
+                                hideObjectGlobal _inventoryBox;
+                                clearItemCargoGlobal _inventoryBox;
+                                _inventoryBox addItemCargoGlobal ["ACE_WaterBottle", 250];
+                                _crate setVariable ["inventoryBox", _inventoryBox, true];
                                 _crate setVariable ["crateItemCount", 250, true];
                                 _crate setVariable ["crateItemType", "water", true];
                                 _crate setVariable ["droppedItems", [], true];
                                 _crate setVariable ["nextDropTime", time + (300 + random 600), true];
+                                [_crate, 0, ["ACE_MainActions"],
+                                    ["OpenInventory", "Open Water Storage", "",
+                                    {params ["_target"]; _box = _target getVariable ["inventoryBox", objNull]; if (!isNull _box) then {player action ["Gear", _box]}},
+                                    {true}]
+                                ] call ace_interact_menu_fnc_addActionToObject;
                                 FOOD_WATER_CRATES pushBack _crate;
                             };
 
@@ -1319,9 +1349,9 @@ player addAction ["Open Crate Spawner", {
                     lbClear _comboType;
                     if (_factoryType == "Town") then {
                         _comboType lbAdd "Food";
-                        _comboType lbSetData [0, "Box_IND_AmmoVeh_F"];
+                        _comboType lbSetData [0, "Land_FoodSacks_01_large_white_idap_F"];
                         _comboType lbAdd "Water";
-                        _comboType lbSetData [1, "Box_IND_Wps_F"];
+                        _comboType lbSetData [1, "Land_PaperBox_01_open_water_F"];
                         _comboType lbAdd "Wood";
                         _comboType lbSetData [2, "Land_WoodPile_03_F"];
                     };
@@ -1434,21 +1464,22 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
             _itemCount = _crate getVariable ["crateItemCount", 250];
             _itemType = _crate getVariable ["crateItemType", "food"];
             _cratePos = getPosATL _crate;
+            _inventoryBox = _crate getVariable ["inventoryBox", objNull];
 
             // Rain damage
-            if (rain > 0.1 && _itemCount > 0) then {
+            if (rain > 0.1 && _itemCount > 0 && !isNull _inventoryBox) then {
                 _damageAmount = floor(1 + (rain * 2));
                 _newCount = (_itemCount - _damageAmount) max 0;
                 _crate setVariable ["crateItemCount", _newCount, true];
                 if (_itemType == "food") then {
-                    clearItemCargoGlobal _crate;
+                    clearItemCargoGlobal _inventoryBox;
                     if (_newCount > 0) then {
-                        _crate addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", _newCount];
+                        _inventoryBox addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", _newCount];
                     };
                 } else {
-                    clearItemCargoGlobal _crate;
+                    clearItemCargoGlobal _inventoryBox;
                     if (_newCount > 0) then {
-                        _crate addItemCargoGlobal ["ACE_WaterBottle", _newCount];
+                        _inventoryBox addItemCargoGlobal ["ACE_WaterBottle", _newCount];
                     };
                 };
             };
@@ -1477,15 +1508,17 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                 _removeAmount = 1 + floor(random 3);
                 _newCount = (_itemCount - _removeAmount) max 0;
                 _crate setVariable ["crateItemCount", _newCount, true];
-                if (_itemType == "food") then {
-                    clearItemCargoGlobal _crate;
-                    if (_newCount > 0) then {
-                        _crate addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", _newCount];
-                    };
-                } else {
-                    clearItemCargoGlobal _crate;
-                    if (_newCount > 0) then {
-                        _crate addItemCargoGlobal ["ACE_WaterBottle", _newCount];
+                if (!isNull _inventoryBox) then {
+                    if (_itemType == "food") then {
+                        clearItemCargoGlobal _inventoryBox;
+                        if (_newCount > 0) then {
+                            _inventoryBox addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", _newCount];
+                        };
+                    } else {
+                        clearItemCargoGlobal _inventoryBox;
+                        if (_newCount > 0) then {
+                            _inventoryBox addItemCargoGlobal ["ACE_WaterBottle", _newCount];
+                        };
                     };
                 };
             };
@@ -1560,15 +1593,18 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                                 
                                 _itemCount = _crate getVariable ["crateItemCount", 0];
                                 _itemType = _crate getVariable ["crateItemType", "food"];
+                                _inventoryBox = _crate getVariable ["inventoryBox", objNull];
                                 _returnAmount = 1 + floor(random 3);
                                 _newCount = (_itemCount + _returnAmount) min 250;
                                 _crate setVariable ["crateItemCount", _newCount, true];
-                                if (_itemType == "food") then {
-                                    clearItemCargoGlobal _crate;
-                                    _crate addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", _newCount];
-                                } else {
-                                    clearItemCargoGlobal _crate;
-                                    _crate addItemCargoGlobal ["ACE_WaterBottle", _newCount];
+                                if (!isNull _inventoryBox) then {
+                                    if (_itemType == "food") then {
+                                        clearItemCargoGlobal _inventoryBox;
+                                        _inventoryBox addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", _newCount];
+                                    } else {
+                                        clearItemCargoGlobal _inventoryBox;
+                                        _inventoryBox addItemCargoGlobal ["ACE_WaterBottle", _newCount];
+                                    };
                                 };
                                 
                                 player removeAction _actionId;
