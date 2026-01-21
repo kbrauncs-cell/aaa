@@ -729,7 +729,7 @@ player addAction ["Open Crate Spawner", {
                     _speedBoost = 1 + (_metal / 100);
                     _adjustedInterval = _intervalSeconds / _speedBoost;
                     _spawnedCrates = CRATE_FACTORY_SPAWNEDCRATES select _factoryIndex;
-                    _spawnedCrates = _spawnedCrates select {!isNull _x};
+                    _spawnedCrates = _spawnedCrates select {!isNull _x && _x distance2D _factoryPos < 40};
                     CRATE_FACTORY_SPAWNEDCRATES set [_factoryIndex, _spawnedCrates];
                     _maxCrates = CRATE_FACTORY_MAXCRATES select _factoryIndex;
                     _actualCrateCount = count _spawnedCrates;
@@ -774,7 +774,7 @@ player addAction ["Open Crate Spawner", {
                         sleep 5;
                     } else {
                         _spawnedCrates = CRATE_FACTORY_SPAWNEDCRATES select _factoryIndex;
-                        _spawnedCrates = _spawnedCrates select {!isNull _x};
+                        _spawnedCrates = _spawnedCrates select {!isNull _x && _x distance2D _factoryPos < 40};
                         CRATE_FACTORY_SPAWNEDCRATES set [_factoryIndex, _spawnedCrates];
                         _maxCrates = CRATE_FACTORY_MAXCRATES select _factoryIndex;
                         _actualCrateCount = count _spawnedCrates;
@@ -831,7 +831,7 @@ player addAction ["Open Crate Spawner", {
                         sleep 5;
                     } else {
                         _spawnedCrates = CRATE_FACTORY_SPAWNEDCRATES select _factoryIndex;
-                        _spawnedCrates = _spawnedCrates select {!isNull _x};
+                        _spawnedCrates = _spawnedCrates select {!isNull _x && _x distance2D _factoryPos < 40};
                         CRATE_FACTORY_SPAWNEDCRATES set [_factoryIndex, _spawnedCrates];
                         _maxCrates = CRATE_FACTORY_MAXCRATES select _factoryIndex;
                         _actualCrateCount = count _spawnedCrates;
@@ -866,7 +866,7 @@ player addAction ["Open Crate Spawner", {
                         sleep 5;
                     } else {
                         _spawnedCrates = CRATE_FACTORY_SPAWNEDCRATES select _factoryIndex;
-                        _spawnedCrates = _spawnedCrates select {!isNull _x};
+                        _spawnedCrates = _spawnedCrates select {!isNull _x && _x distance2D _factoryPos < 40};
                         CRATE_FACTORY_SPAWNEDCRATES set [_factoryIndex, _spawnedCrates];
                         _maxCrates = CRATE_FACTORY_MAXCRATES select _factoryIndex;
                         _actualCrateCount = count _spawnedCrates;
@@ -1093,9 +1093,10 @@ player addAction ["Open Crate Spawner", {
             _labelCost = _display displayCtrl 1051;
             if (_selectedIndex >= 0 && _selectedIndex < count CRATE_FACTORY_POSITIONS) then {
                 _factoryType = CRATE_FACTORY_TYPES select _selectedIndex;
+                _factoryPos = CRATE_FACTORY_POSITIONS select _selectedIndex;
 
                 _spawnedCrates = CRATE_FACTORY_SPAWNEDCRATES select _selectedIndex;
-                _spawnedCrates = _spawnedCrates select {!isNull _x};
+                _spawnedCrates = _spawnedCrates select {!isNull _x && _x distance2D _factoryPos < 40};
                 CRATE_FACTORY_SPAWNEDCRATES set [_selectedIndex, _spawnedCrates];
                 _crateCount = count _spawnedCrates;
                 CRATE_FACTORY_COUNTS set [_selectedIndex, _crateCount];
