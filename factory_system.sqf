@@ -36,8 +36,6 @@ player addAction ["Open Crate Spawner", {
     if (isNil "CRATE_FACTORY_METAL") then {CRATE_FACTORY_METAL = []};
     if (isNil "CRATE_FACTORY_WOOD") then {CRATE_FACTORY_WOOD = []};
     if (isNil "CRATE_FACTORY_COAL") then {CRATE_FACTORY_COAL = []};
-    if (isNil "CRATE_FACTORY_MAINTENANCE_TIMERS") then {CRATE_FACTORY_MAINTENANCE_TIMERS = []};
-    if (isNil "CRATE_FACTORY_NEEDS_MAINTENANCE") then {CRATE_FACTORY_NEEDS_MAINTENANCE = []};
     if (isNil "CRATE_SELECTED_FACTORY") then {CRATE_SELECTED_FACTORY = -1};
     if (isNil "CRATE_FACTORY_FIRES") then {CRATE_FACTORY_FIRES = []};
     if (isNil "CRATE_FACTORY_MORALE") then {CRATE_FACTORY_MORALE = []};
@@ -447,8 +445,6 @@ player addAction ["Open Crate Spawner", {
         };
         CRATE_FACTORY_WOOD pushBack 100;
         CRATE_FACTORY_COAL pushBack 100;
-        CRATE_FACTORY_MAINTENANCE_TIMERS pushBack (2700 + random 4500);
-        CRATE_FACTORY_NEEDS_MAINTENANCE pushBack false;
         CRATE_FACTORY_FIRES pushBack [];
         CRATE_FACTORY_MORALE pushBack 100;
         CRATE_FACTORY_TASK_PENDING pushBack false;
@@ -484,101 +480,73 @@ player addAction ["Open Crate Spawner", {
         if (_currentLevel >= 5) exitWith {systemChat "Factory already at max level!"};
 
         _nextLevel = _currentLevel + 1;
-        _canUpgrade = false;
+        _foodCost = 0; _waterCost = 0; _woodCost = 0; _metalCost = 0; _coalCost = 0; _energyCost = 0;
+
+        if (_factoryType == "Town") then {
+            if (_nextLevel == 2) then {_foodCost = 2; _waterCost = 2; _woodCost = 3; _metalCost = 1};
+            if (_nextLevel == 3) then {_foodCost = 5; _waterCost = 5; _woodCost = 8; _metalCost = 3; _coalCost = 2};
+            if (_nextLevel == 4) then {_foodCost = 10; _waterCost = 10; _woodCost = 12; _metalCost = 8; _coalCost = 5; _energyCost = 3};
+            if (_nextLevel == 5) then {_foodCost = 15; _waterCost = 15; _woodCost = 18; _metalCost = 12; _coalCost = 8; _energyCost = 8};
+        };
+
+        if (_factoryType == "Mineral") then {
+            if (_nextLevel == 2) then {_foodCost = 3; _waterCost = 4; _woodCost = 5; _metalCost = 2; _coalCost = 1};
+            if (_nextLevel == 3) then {_foodCost = 8; _waterCost = 10; _woodCost = 12; _metalCost = 5; _coalCost = 4; _energyCost = 2};
+            if (_nextLevel == 4) then {_foodCost = 15; _waterCost = 18; _woodCost = 20; _metalCost = 12; _coalCost = 10; _energyCost = 5};
+            if (_nextLevel == 5) then {_foodCost = 25; _waterCost = 25; _woodCost = 30; _metalCost = 20; _coalCost = 15; _energyCost = 12};
+        };
+
+        if (_factoryType == "Pier") then {
+            if (_nextLevel == 2) then {_foodCost = 4; _waterCost = 5; _woodCost = 6; _metalCost = 2; _coalCost = 1; _energyCost = 1};
+            if (_nextLevel == 3) then {_foodCost = 10; _waterCost = 12; _woodCost = 15; _metalCost = 6; _coalCost = 5; _energyCost = 3};
+            if (_nextLevel == 4) then {_foodCost = 18; _waterCost = 20; _woodCost = 25; _metalCost = 15; _coalCost = 12; _energyCost = 8};
+            if (_nextLevel == 5) then {_foodCost = 30; _waterCost = 30; _woodCost = 35; _metalCost = 25; _coalCost = 18; _energyCost = 15};
+        };
+
+        if (_factoryType == "Powerplant") then {
+            if (_nextLevel == 2) then {_foodCost = 5; _waterCost = 5; _woodCost = 8; _metalCost = 5; _coalCost = 8; _energyCost = 3};
+            if (_nextLevel == 3) then {_foodCost = 12; _waterCost = 15; _woodCost = 18; _metalCost = 12; _coalCost = 15; _energyCost = 8};
+            if (_nextLevel == 4) then {_foodCost = 22; _waterCost = 25; _woodCost = 30; _metalCost = 20; _coalCost = 25; _energyCost = 15};
+            if (_nextLevel == 5) then {_foodCost = 35; _waterCost = 35; _woodCost = 40; _metalCost = 35; _coalCost = 35; _energyCost = 25};
+        };
+
+        if (_factoryType == "Vehicle") then {
+            if (_nextLevel == 2) then {_foodCost = 6; _waterCost = 6; _woodCost = 10; _metalCost = 8; _coalCost = 5; _energyCost = 5};
+            if (_nextLevel == 3) then {_foodCost = 15; _waterCost = 18; _woodCost = 25; _metalCost = 18; _coalCost = 12; _energyCost = 15};
+            if (_nextLevel == 4) then {_foodCost = 28; _waterCost = 30; _woodCost = 40; _metalCost = 30; _coalCost = 20; _energyCost = 25};
+            if (_nextLevel == 5) then {_foodCost = 45; _waterCost = 45; _woodCost = 50; _metalCost = 50; _coalCost = 30; _energyCost = 40};
+        };
+
+        _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
+        _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
+        _nearWood = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 50];
+        _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
+        _nearCoal = nearestObjects [_factoryPos, ["Land_PaperBox_closed_F"], 50];
+        _nearEnergy = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 50];
+
         _missingResources = [];
-
-        if (_nextLevel == 2) then {
-            _foodCost = 3; _waterCost = 3; _woodCost = 3;
-            _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
-            _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
-            _nearWood = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 50];
-            if (count _nearFood < _foodCost) then {_missingResources pushBack ("Food: need " + str(_foodCost) + ", found " + str(count _nearFood))};
-            if (count _nearWater < _waterCost) then {_missingResources pushBack ("Water: need " + str(_waterCost) + ", found " + str(count _nearWater))};
-            if (count _nearWood < _woodCost) then {_missingResources pushBack ("Wood: need " + str(_woodCost) + ", found " + str(count _nearWood))};
-            if (count _missingResources == 0) then {
-                for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFood select _i)};
-                for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWater select _i)};
-                for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWood select _i)};
-                _canUpgrade = true;
-            };
-        };
-
-        if (_nextLevel == 3) then {
-            _foodCost = 8; _waterCost = 8; _woodCost = 8; _metalCost = 5;
-            _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
-            _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
-            _nearWood = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 50];
-            _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
-            if (count _nearFood < _foodCost) then {_missingResources pushBack ("Food: need " + str(_foodCost) + ", found " + str(count _nearFood))};
-            if (count _nearWater < _waterCost) then {_missingResources pushBack ("Water: need " + str(_waterCost) + ", found " + str(count _nearWater))};
-            if (count _nearWood < _woodCost) then {_missingResources pushBack ("Wood: need " + str(_woodCost) + ", found " + str(count _nearWood))};
-            if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: need " + str(_metalCost) + ", found " + str(count _nearMetal))};
-            if (count _missingResources == 0) then {
-                for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFood select _i)};
-                for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWater select _i)};
-                for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWood select _i)};
-                for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
-                _canUpgrade = true;
-            };
-        };
-
-        if (_nextLevel == 4) then {
-            _foodCost = 15; _waterCost = 15; _woodCost = 15; _metalCost = 12; _coalCost = 8;
-            _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
-            _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
-            _nearWood = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 50];
-            _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
-            _nearCoal = nearestObjects [_factoryPos, ["Land_PaperBox_closed_F"], 50];
-            if (count _nearFood < _foodCost) then {_missingResources pushBack ("Food: need " + str(_foodCost) + ", found " + str(count _nearFood))};
-            if (count _nearWater < _waterCost) then {_missingResources pushBack ("Water: need " + str(_waterCost) + ", found " + str(count _nearWater))};
-            if (count _nearWood < _woodCost) then {_missingResources pushBack ("Wood: need " + str(_woodCost) + ", found " + str(count _nearWood))};
-            if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: need " + str(_metalCost) + ", found " + str(count _nearMetal))};
-            if (count _nearCoal < _coalCost) then {_missingResources pushBack ("Coal: need " + str(_coalCost) + ", found " + str(count _nearCoal))};
-            if (count _missingResources == 0) then {
-                for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFood select _i)};
-                for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWater select _i)};
-                for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWood select _i)};
-                for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
-                for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoal select _i)};
-                _canUpgrade = true;
-            };
-        };
-
-        if (_nextLevel == 5) then {
-            _foodCost = 25; _waterCost = 25; _woodCost = 25; _metalCost = 20; _coalCost = 15; _energyCost = 10;
-            _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
-            _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
-            _nearWood = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 50];
-            _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
-            _nearCoal = nearestObjects [_factoryPos, ["Land_PaperBox_closed_F"], 50];
-            _nearEnergy = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 50];
-            if (count _nearFood < _foodCost) then {_missingResources pushBack ("Food: need " + str(_foodCost) + ", found " + str(count _nearFood))};
-            if (count _nearWater < _waterCost) then {_missingResources pushBack ("Water: need " + str(_waterCost) + ", found " + str(count _nearWater))};
-            if (count _nearWood < _woodCost) then {_missingResources pushBack ("Wood: need " + str(_woodCost) + ", found " + str(count _nearWood))};
-            if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: need " + str(_metalCost) + ", found " + str(count _nearMetal))};
-            if (count _nearCoal < _coalCost) then {_missingResources pushBack ("Coal: need " + str(_coalCost) + ", found " + str(count _nearCoal))};
-            if (count _nearEnergy < _energyCost) then {_missingResources pushBack ("Energy: need " + str(_energyCost) + ", found " + str(count _nearEnergy))};
-            if (count _missingResources == 0) then {
-                for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFood select _i)};
-                for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWater select _i)};
-                for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWood select _i)};
-                for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
-                for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoal select _i)};
-                for "_i" from 0 to (_energyCost - 1) do {deleteVehicle (_nearEnergy select _i)};
-                _canUpgrade = true;
-            };
-        };
+        if (_foodCost > 0 && count _nearFood < _foodCost) then {_missingResources pushBack ("Food: need " + str(_foodCost) + ", found " + str(count _nearFood))};
+        if (_waterCost > 0 && count _nearWater < _waterCost) then {_missingResources pushBack ("Water: need " + str(_waterCost) + ", found " + str(count _nearWater))};
+        if (_woodCost > 0 && count _nearWood < _woodCost) then {_missingResources pushBack ("Wood: need " + str(_woodCost) + ", found " + str(count _nearWood))};
+        if (_metalCost > 0 && count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: need " + str(_metalCost) + ", found " + str(count _nearMetal))};
+        if (_coalCost > 0 && count _nearCoal < _coalCost) then {_missingResources pushBack ("Coal: need " + str(_coalCost) + ", found " + str(count _nearCoal))};
+        if (_energyCost > 0 && count _nearEnergy < _energyCost) then {_missingResources pushBack ("Energy: need " + str(_energyCost) + ", found " + str(count _nearEnergy))};
 
         if (count _missingResources > 0) exitWith {
             systemChat ("Missing resources for Level " + str(_nextLevel) + ": " + (_missingResources joinString " | "));
         };
 
-        if (_canUpgrade) then {
-            CRATE_FACTORY_LEVEL set [_selectedIndex, _nextLevel];
-            _newMaxCrates = 10 + (_nextLevel * 2);
-            CRATE_FACTORY_MAXCRATES set [_selectedIndex, _newMaxCrates];
-            systemChat (_factoryType + " Factory #" + str(_selectedIndex + 1) + " upgraded to Level " + str(_nextLevel) + "! Max crates: " + str(_newMaxCrates));
-        };
+        if (_foodCost > 0) then {for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFood select _i)}};
+        if (_waterCost > 0) then {for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWater select _i)}};
+        if (_woodCost > 0) then {for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWood select _i)}};
+        if (_metalCost > 0) then {for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)}};
+        if (_coalCost > 0) then {for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoal select _i)}};
+        if (_energyCost > 0) then {for "_i" from 0 to (_energyCost - 1) do {deleteVehicle (_nearEnergy select _i)}};
+
+        CRATE_FACTORY_LEVEL set [_selectedIndex, _nextLevel];
+        _newMaxCrates = 10 + (_nextLevel * 2);
+        CRATE_FACTORY_MAXCRATES set [_selectedIndex, _newMaxCrates];
+        systemChat (_factoryType + " Factory #" + str(_selectedIndex + 1) + " upgraded to Level " + str(_nextLevel) + "! Max crates: " + str(_newMaxCrates));
     }];
 
     _btnResupply = _display ctrlCreate ["RscButton", 1037];
@@ -594,87 +562,104 @@ player addAction ["Open Crate Spawner", {
         _selectedIndex = CRATE_SELECTED_FACTORY;
         _factoryType = CRATE_FACTORY_TYPES select _selectedIndex;
         _factoryPos = CRATE_FACTORY_POSITIONS select _selectedIndex;
+        _factoryLevel = CRATE_FACTORY_LEVEL select _selectedIndex;
 
-        _canResupply = false;
-        _missingResources = [];
+        _baseCost = 1 + _factoryLevel;
+        _metalCost = _baseCost + floor(random 2);
 
         if (_factoryType == "Town") then {
-            _metalCost = 8;
             _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
-            if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: need " + str(_metalCost) + ", found " + str(count _nearMetal))};
-            if (count _missingResources == 0) then {
-                for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
-                CRATE_FACTORY_METAL set [_selectedIndex, 100];
-                _canResupply = true;
+            if (count _nearMetal < _metalCost) exitWith {
+                systemChat ("Missing Metal: need " + str(_metalCost) + ", found " + str(count _nearMetal));
             };
+            for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
+            CRATE_FACTORY_METAL set [_selectedIndex, 100];
+            systemChat (_factoryType + " Factory #" + str(_selectedIndex + 1) + " resupplied for " + str(_metalCost) + " Metal!");
         };
 
         if (_factoryType == "Mineral" || _factoryType == "Pier") then {
-            _foodCost = 10; _waterCost = 10; _woodCost = 10; _elecCost = 5; _metalCost = 5;
+            _foodCost = _baseCost + floor(random 3);
+            _waterCost = _baseCost + floor(random 3);
+            _woodCost = _baseCost + floor(random 3);
+            _elecCost = _baseCost + floor(random 2);
             _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
             _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
             _nearWood = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 50];
             _nearElec = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 50];
             _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
-            if (count _nearFood < _foodCost) then {_missingResources pushBack ("Food: need " + str(_foodCost) + ", found " + str(count _nearFood))};
-            if (count _nearWater < _waterCost) then {_missingResources pushBack ("Water: need " + str(_waterCost) + ", found " + str(count _nearWater))};
-            if (count _nearWood < _woodCost) then {_missingResources pushBack ("Wood: need " + str(_woodCost) + ", found " + str(count _nearWood))};
-            if (count _nearElec < _elecCost) then {_missingResources pushBack ("Elec: need " + str(_elecCost) + ", found " + str(count _nearElec))};
-            if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: need " + str(_metalCost) + ", found " + str(count _nearMetal))};
-            if (count _missingResources == 0) then {
-                for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFood select _i)};
-                for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWater select _i)};
-                for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWood select _i)};
-                for "_i" from 0 to (_elecCost - 1) do {deleteVehicle (_nearElec select _i)};
-                for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
-                CRATE_FACTORY_FOOD set [_selectedIndex, 100];
-                CRATE_FACTORY_WATER set [_selectedIndex, 100];
-                CRATE_FACTORY_WOOD set [_selectedIndex, 100];
-                CRATE_FACTORY_ELECTRICITY set [_selectedIndex, 100];
-                CRATE_FACTORY_METAL set [_selectedIndex, 100];
-                _canResupply = true;
+
+            _missingResources = [];
+            if (count _nearFood < _foodCost) then {_missingResources pushBack ("Food: " + str(_foodCost))};
+            if (count _nearWater < _waterCost) then {_missingResources pushBack ("Water: " + str(_waterCost))};
+            if (count _nearWood < _woodCost) then {_missingResources pushBack ("Wood: " + str(_woodCost))};
+            if (count _nearElec < _elecCost) then {_missingResources pushBack ("Elec: " + str(_elecCost))};
+            if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: " + str(_metalCost))};
+
+            if (count _missingResources > 0) exitWith {
+                systemChat ("Missing: " + (_missingResources joinString " | "));
             };
+
+            for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFood select _i)};
+            for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWater select _i)};
+            for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWood select _i)};
+            for "_i" from 0 to (_elecCost - 1) do {deleteVehicle (_nearElec select _i)};
+            for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
+
+            CRATE_FACTORY_FOOD set [_selectedIndex, 100];
+            CRATE_FACTORY_WATER set [_selectedIndex, 100];
+            CRATE_FACTORY_WOOD set [_selectedIndex, 100];
+            CRATE_FACTORY_ELECTRICITY set [_selectedIndex, 100];
+            CRATE_FACTORY_METAL set [_selectedIndex, 100];
+
+            systemChat (_factoryType + " Factory #" + str(_selectedIndex + 1) + " resupplied!");
         };
 
         if (_factoryType == "Powerplant") then {
-            _coalCost = 15; _waterCost = 10; _metalCost = 8;
+            _coalCost = _baseCost + 2 + floor(random 3);
+            _waterCost = _baseCost + floor(random 3);
             _nearCoal = nearestObjects [_factoryPos, ["Land_PaperBox_closed_F"], 50];
             _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
             _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
-            if (count _nearCoal < _coalCost) then {_missingResources pushBack ("Coal: need " + str(_coalCost) + ", found " + str(count _nearCoal))};
-            if (count _nearWater < _waterCost) then {_missingResources pushBack ("Water: need " + str(_waterCost) + ", found " + str(count _nearWater))};
-            if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: need " + str(_metalCost) + ", found " + str(count _nearMetal))};
-            if (count _missingResources == 0) then {
-                for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoal select _i)};
-                for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWater select _i)};
-                for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
-                CRATE_FACTORY_COAL set [_selectedIndex, 100];
-                CRATE_FACTORY_WATER set [_selectedIndex, 100];
-                CRATE_FACTORY_METAL set [_selectedIndex, 100];
-                _canResupply = true;
+
+            _missingResources = [];
+            if (count _nearCoal < _coalCost) then {_missingResources pushBack ("Coal: " + str(_coalCost))};
+            if (count _nearWater < _waterCost) then {_missingResources pushBack ("Water: " + str(_waterCost))};
+            if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: " + str(_metalCost))};
+
+            if (count _missingResources > 0) exitWith {
+                systemChat ("Missing: " + (_missingResources joinString " | "));
             };
+
+            for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoal select _i)};
+            for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWater select _i)};
+            for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
+
+            CRATE_FACTORY_COAL set [_selectedIndex, 100];
+            CRATE_FACTORY_WATER set [_selectedIndex, 100];
+            CRATE_FACTORY_METAL set [_selectedIndex, 100];
+
+            systemChat (_factoryType + " Factory #" + str(_selectedIndex + 1) + " resupplied!");
         };
 
         if (_factoryType == "Vehicle") then {
-            _elecCost = 12; _metalCost = 10;
+            _elecCost = _baseCost + 1 + floor(random 3);
             _nearElec = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 50];
             _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
-            if (count _nearElec < _elecCost) then {_missingResources pushBack ("Elec: need " + str(_elecCost) + ", found " + str(count _nearElec))};
-            if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: need " + str(_metalCost) + ", found " + str(count _nearMetal))};
-            if (count _missingResources == 0) then {
-                for "_i" from 0 to (_elecCost - 1) do {deleteVehicle (_nearElec select _i)};
-                for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
-                CRATE_FACTORY_ELECTRICITY set [_selectedIndex, 100];
-                CRATE_FACTORY_METAL set [_selectedIndex, 100];
-                _canResupply = true;
+
+            _missingResources = [];
+            if (count _nearElec < _elecCost) then {_missingResources pushBack ("Elec: " + str(_elecCost))};
+            if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: " + str(_metalCost))};
+
+            if (count _missingResources > 0) exitWith {
+                systemChat ("Missing: " + (_missingResources joinString " | "));
             };
-        };
 
-        if (count _missingResources > 0) exitWith {
-            systemChat ("Missing resources for resupply: " + (_missingResources joinString " | "));
-        };
+            for "_i" from 0 to (_elecCost - 1) do {deleteVehicle (_nearElec select _i)};
+            for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
 
-        if (_canResupply) then {
+            CRATE_FACTORY_ELECTRICITY set [_selectedIndex, 100];
+            CRATE_FACTORY_METAL set [_selectedIndex, 100];
+
             systemChat (_factoryType + " Factory #" + str(_selectedIndex + 1) + " resupplied!");
         };
     }];
@@ -691,8 +676,6 @@ player addAction ["Open Crate Spawner", {
         _display = ctrlParent _ctrl;
         if (CRATE_SELECTED_FACTORY < 0) exitWith {systemChat "Select factory!"};
         _selectedIndex = CRATE_SELECTED_FACTORY;
-        _needsMaint = CRATE_FACTORY_NEEDS_MAINTENANCE select _selectedIndex;
-        if (_needsMaint) exitWith {systemChat "Needs maintenance!"};
         _script = CRATE_SPAWN_SCRIPTS select _selectedIndex;
         if (!isNull _script) exitWith {systemChat "Already running!"};
         _interval = parseNumber (ctrlText (_display displayCtrl 1003));
@@ -708,61 +691,64 @@ player addAction ["Open Crate Spawner", {
         _newScript = [_intervalSeconds, _crateType, _factoryPos, _selectedIndex, _factoryType] spawn {
             params ["_intervalSeconds", "_crateType", "_factoryPos", "_factoryIndex", "_factoryType"];
             while {true} do {
-                _maintTimer = CRATE_FACTORY_MAINTENANCE_TIMERS select _factoryIndex;
-                _maintTimer = _maintTimer - 0.5;
-                CRATE_FACTORY_MAINTENANCE_TIMERS set [_factoryIndex, _maintTimer];
-                if (_maintTimer <= 0) then {
-                    CRATE_FACTORY_NEEDS_MAINTENANCE set [_factoryIndex, true];
-                    systemChat format ["Factory %1 needs maintenance!", _factoryIndex + 1];
-                    terminate (CRATE_SPAWN_SCRIPTS select _factoryIndex);
-                    CRATE_SPAWN_SCRIPTS set [_factoryIndex, scriptNull];
-                    CRATE_FACTORY_TIMERS set [_factoryIndex, 0];
-                };
-                _needsMaint = CRATE_FACTORY_NEEDS_MAINTENANCE select _factoryIndex;
-                if (_needsMaint) exitWith {};
-
                 _taskTimer = CRATE_FACTORY_TASK_TIMER select _factoryIndex;
                 _hasTask = CRATE_FACTORY_TASK_PENDING select _factoryIndex;
                 if (!_hasTask && _taskTimer > 0) then {
                     _taskTimer = _taskTimer - 0.5;
                     CRATE_FACTORY_TASK_TIMER set [_factoryIndex, _taskTimer];
                     if (_taskTimer <= 0) then {
-                        _isCivilian = (random 1 < 0.75);
-                        _taskType = if (_isCivilian) then {"Civilian"} else {"Military"};
-                        _allTasks = call BIS_fnc_taskChildren;
-                        _nearbyTasks = [];
-                        {
-                            _taskPos = [_x] call BIS_fnc_taskDestination;
-                            if (!isNil "_taskPos" && {_taskPos distance2D _factoryPos < 400}) then {
-                                _nearbyTasks pushBack _x;
+                        _playerNearby = (player distance2D _factoryPos < 400);
+                        if (_playerNearby) then {
+                            _allTasks = call BIS_fnc_taskChildren;
+                            _existingTasks = [];
+                            {
+                                _taskPos = [_x] call BIS_fnc_taskDestination;
+                                if (!isNil "_taskPos" && {_taskPos distance2D _factoryPos < 400}) then {
+                                    _existingTasks pushBack _x;
+                                };
+                            } forEach _allTasks;
+
+                            _waitForTask = true;
+                            _maxWaitTime = 60;
+                            _waitedTime = 0;
+
+                            while {_waitForTask && _waitedTime < _maxWaitTime} do {
+                                sleep 1;
+                                _waitedTime = _waitedTime + 1;
+                                _newTasks = call BIS_fnc_taskChildren;
+                                {
+                                    _taskPos = [_x] call BIS_fnc_taskDestination;
+                                    if (!isNil "_taskPos" && {_taskPos distance2D _factoryPos < 400} && {!(_x in _existingTasks)}) then {
+                                        _isCivilian = (random 1 < 0.75);
+                                        _taskType = if (_isCivilian) then {"Civilian"} else {"Military"};
+                                        CRATE_FACTORY_TASK_PENDING set [_factoryIndex, true];
+                                        CRATE_FACTORY_TASK_TYPE set [_factoryIndex, _taskType];
+                                        CRATE_FACTORY_TASK_ID set [_factoryIndex, _x];
+                                        systemChat format ["Factory %1: %2 task created and tracked!", _factoryIndex + 1, _taskType];
+                                        _waitForTask = false;
+                                    };
+                                } forEach _newTasks;
                             };
-                        } forEach _allTasks;
+                        };
 
                         _minTime = CRATE_FACTORY_TASK_MIN_TIME select _factoryIndex;
                         _maxTime = CRATE_FACTORY_TASK_MAX_TIME select _factoryIndex;
+                        _newTimer = _minTime + random (_maxTime - _minTime);
                         _midpoint = (_minTime + _maxTime) / 2;
 
-                        if (_taskTimer < _midpoint) then {
-                            _minTime = _minTime + 3600;
+                        if (_newTimer < _midpoint) then {
+                            _minTime = (_minTime + 3600) min 21600;
                             _maxTime = 21600;
-                            systemChat format ["Factory %1: Task spawned early! Next window: %2min-%3min", _factoryIndex + 1, round(_minTime/60), round(_maxTime/60)];
+                            systemChat format ["Factory %1: Timer early! Next: %2min-%3min", _factoryIndex + 1, round(_minTime/60), round(_maxTime/60)];
                         } else {
                             _maxTime = (_maxTime - 3600) max 1800;
                             _minTime = 1800;
-                            systemChat format ["Factory %1: Task spawned late! Next window: %2min-%3min", _factoryIndex + 1, round(_minTime/60), round(_maxTime/60)];
+                            systemChat format ["Factory %1: Timer late! Next: %2min-%3min", _factoryIndex + 1, round(_minTime/60), round(_maxTime/60)];
                         };
 
                         CRATE_FACTORY_TASK_MIN_TIME set [_factoryIndex, _minTime];
                         CRATE_FACTORY_TASK_MAX_TIME set [_factoryIndex, _maxTime];
-
-                        if (count _nearbyTasks > 0) then {
-                            _selectedTask = selectRandom _nearbyTasks;
-                            CRATE_FACTORY_TASK_PENDING set [_factoryIndex, true];
-                            CRATE_FACTORY_TASK_TYPE set [_factoryIndex, _taskType];
-                            CRATE_FACTORY_TASK_ID set [_factoryIndex, _selectedTask];
-                            systemChat format ["Factory %1: %2 task detected nearby!", _factoryIndex + 1, _taskType];
-                        };
-                        CRATE_FACTORY_TASK_TIMER set [_factoryIndex, (_minTime + random (_maxTime - _minTime))];
+                        CRATE_FACTORY_TASK_TIMER set [_factoryIndex, _newTimer];
                     };
                 };
 
@@ -773,19 +759,16 @@ player addAction ["Open Crate Spawner", {
                         CRATE_FACTORY_TASK_PENDING set [_factoryIndex, false];
                         CRATE_FACTORY_TASK_TYPE set [_factoryIndex, ""];
                         CRATE_FACTORY_TASK_ID set [_factoryIndex, ""];
-                        _currentMorale = CRATE_FACTORY_MORALE select _factoryIndex;
-                        _newMorale = (_currentMorale + 2) min 100;
-                        CRATE_FACTORY_MORALE set [_factoryIndex, _newMorale];
 
                         _fires = CRATE_FACTORY_FIRES select _factoryIndex;
                         {deleteVehicle _x} forEach _fires;
                         CRATE_FACTORY_FIRES set [_factoryIndex, []];
                         CRATE_FACTORY_OPFOR_SPAWNED set [_factoryIndex, false];
 
-                        systemChat format ["Factory %1: Task complete! Morale improving.", _factoryIndex + 1];
+                        systemChat format ["Factory %1: Task complete! Morale recovering gradually.", _factoryIndex + 1];
                     } else {
                         _currentMorale = CRATE_FACTORY_MORALE select _factoryIndex;
-                        _newMorale = (_currentMorale - 0.1) max 0;
+                        _newMorale = (_currentMorale - 0.00463) max 0;
                         CRATE_FACTORY_MORALE set [_factoryIndex, _newMorale];
 
                         if (_newMorale < 40 && _newMorale >= 30) then {
@@ -820,6 +803,10 @@ player addAction ["Open Crate Spawner", {
                             };
                         };
                     };
+                } else {
+                    _currentMorale = CRATE_FACTORY_MORALE select _factoryIndex;
+                    _newMorale = (_currentMorale + 0.00278) min 100;
+                    CRATE_FACTORY_MORALE set [_factoryIndex, _newMorale];
                 };
 
                 if (_factoryType == "Town") then {
@@ -1091,8 +1078,6 @@ player addAction ["Open Crate Spawner", {
         CRATE_FACTORY_METAL deleteAt _selectedIndex;
         CRATE_FACTORY_WOOD deleteAt _selectedIndex;
         CRATE_FACTORY_COAL deleteAt _selectedIndex;
-        CRATE_FACTORY_MAINTENANCE_TIMERS deleteAt _selectedIndex;
-        CRATE_FACTORY_NEEDS_MAINTENANCE deleteAt _selectedIndex;
         CRATE_FACTORY_FIRES deleteAt _selectedIndex;
         CRATE_FACTORY_MORALE deleteAt _selectedIndex;
         CRATE_FACTORY_TASK_PENDING deleteAt _selectedIndex;
@@ -1181,8 +1166,6 @@ player addAction ["Open Crate Spawner", {
         CRATE_FACTORY_METAL = [];
         CRATE_FACTORY_WOOD = [];
         CRATE_FACTORY_COAL = [];
-        CRATE_FACTORY_MAINTENANCE_TIMERS = [];
-        CRATE_FACTORY_NEEDS_MAINTENANCE = [];
         CRATE_FACTORY_FIRES = [];
         CRATE_FACTORY_MORALE = [];
         CRATE_FACTORY_TASK_PENDING = [];
