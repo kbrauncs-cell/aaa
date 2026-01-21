@@ -1534,7 +1534,7 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                 // Start countdown when all items dropped
                 if (_newCount <= 0 && !(_crate getVariable ["countdownStarted", false])) then {
                     _crate setVariable ["countdownStarted", true, true];
-                    _crate setVariable ["countdownTime", 300, true];
+                    _crate setVariable ["countdownTime", 3600, true];
                     _crate setVariable ["initialDroppedCount", count _droppedItems, true];
                     _crate setVariable ["deletedItemsCount", 0, true];
                 };
@@ -1543,15 +1543,15 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
             // Countdown and progressive deletion system
             _countdownStarted = _crate getVariable ["countdownStarted", false];
             if (_countdownStarted) then {
-                _countdownTime = _crate getVariable ["countdownTime", 300];
+                _countdownTime = _crate getVariable ["countdownTime", 3600];
                 _initialCount = _crate getVariable ["initialDroppedCount", 10];
                 _deletedCount = _crate getVariable ["deletedItemsCount", 0];
 
                 _countdownTime = _countdownTime - 5;
                 _crate setVariable ["countdownTime", _countdownTime, true];
 
-                _timePerItem = 300 / _initialCount;
-                _itemsToDelete = floor((300 - _countdownTime) / _timePerItem);
+                _timePerItem = 3600 / _initialCount;
+                _itemsToDelete = floor((3600 - _countdownTime) / _timePerItem);
 
                 if (_itemsToDelete > _deletedCount && _itemsToDelete <= count _droppedItems) then {
                     for "_i" from _deletedCount to (_itemsToDelete - 1) do {
@@ -1652,7 +1652,7 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                                 // Cancel countdown if items are returned
                                 if (_newCount > 0) then {
                                     _crate setVariable ["countdownStarted", false, true];
-                                    _crate setVariable ["countdownTime", 300, true];
+                                    _crate setVariable ["countdownTime", 3600, true];
                                     _crate setVariable ["deletedItemsCount", 0, true];
                                 };
 
