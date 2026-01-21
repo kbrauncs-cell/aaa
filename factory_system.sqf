@@ -47,7 +47,6 @@ player addAction ["Open Crate Spawner", {
     if (isNil "CRATE_FACTORY_TASK_TIMER") then {CRATE_FACTORY_TASK_TIMER = []};
     if (isNil "CRATE_FACTORY_TASK_MIN_TIME") then {CRATE_FACTORY_TASK_MIN_TIME = []};
     if (isNil "CRATE_FACTORY_TASK_MAX_TIME") then {CRATE_FACTORY_TASK_MAX_TIME = []};
-    if (isNil "CRATE_FACTORY_TASK_START_TIME") then {CRATE_FACTORY_TASK_START_TIME = []};
     if (isNil "CRATE_FACTORY_OPFOR_SPAWNED") then {CRATE_FACTORY_OPFOR_SPAWNED = []};
     if (isNil "CRATE_MOUSE_POS") then {CRATE_MOUSE_POS = []};
     if (isNil "CRATE_FACTORY_LEVEL") then {CRATE_FACTORY_LEVEL = []};
@@ -418,7 +417,6 @@ player addAction ["Open Crate Spawner", {
         CRATE_FACTORY_TASK_MIN_TIME pushBack 1800;
         CRATE_FACTORY_TASK_MAX_TIME pushBack 21600;
         CRATE_FACTORY_TASK_TIMER pushBack (1800 + random 19800);
-        CRATE_FACTORY_TASK_START_TIME pushBack 0;
         CRATE_FACTORY_OPFOR_SPAWNED pushBack false;
         CRATE_FACTORY_LEVEL pushBack 1;
 
@@ -700,16 +698,30 @@ player addAction ["Open Crate Spawner", {
                             };
                         } forEach _allTasks;
 
+                        _minTime = CRATE_FACTORY_TASK_MIN_TIME select _factoryIndex;
+                        _maxTime = CRATE_FACTORY_TASK_MAX_TIME select _factoryIndex;
+                        _midpoint = (_minTime + _maxTime) / 2;
+
+                        if (_taskTimer < _midpoint) then {
+                            _minTime = _minTime + 3600;
+                            _maxTime = 21600;
+                            systemChat format ["Factory %1: Task spawned early! Next window: %2min-%3min", _factoryIndex + 1, round(_minTime/60), round(_maxTime/60)];
+                        } else {
+                            _maxTime = (_maxTime - 3600) max 1800;
+                            _minTime = 1800;
+                            systemChat format ["Factory %1: Task spawned late! Next window: %2min-%3min", _factoryIndex + 1, round(_minTime/60), round(_maxTime/60)];
+                        };
+
+                        CRATE_FACTORY_TASK_MIN_TIME set [_factoryIndex, _minTime];
+                        CRATE_FACTORY_TASK_MAX_TIME set [_factoryIndex, _maxTime];
+
                         if (count _nearbyTasks > 0) then {
                             _selectedTask = selectRandom _nearbyTasks;
                             CRATE_FACTORY_TASK_PENDING set [_factoryIndex, true];
                             CRATE_FACTORY_TASK_TYPE set [_factoryIndex, _taskType];
                             CRATE_FACTORY_TASK_ID set [_factoryIndex, _selectedTask];
-                            CRATE_FACTORY_TASK_START_TIME set [_factoryIndex, time];
                             systemChat format ["Factory %1: %2 task detected nearby!", _factoryIndex + 1, _taskType];
                         };
-                        _minTime = CRATE_FACTORY_TASK_MIN_TIME select _factoryIndex;
-                        _maxTime = CRATE_FACTORY_TASK_MAX_TIME select _factoryIndex;
                         CRATE_FACTORY_TASK_TIMER set [_factoryIndex, (_minTime + random (_maxTime - _minTime))];
                     };
                 };
@@ -718,38 +730,19 @@ player addAction ["Open Crate Spawner", {
                     _taskID = CRATE_FACTORY_TASK_ID select _factoryIndex;
                     _taskState = [_taskID] call BIS_fnc_taskState;
                     if (_taskState == "SUCCEEDED" || _taskState == "FAILED" || _taskState == "CANCELED") then {
-                        _startTime = CRATE_FACTORY_TASK_START_TIME select _factoryIndex;
-                        _elapsedTime = time - _startTime;
-                        _minTime = CRATE_FACTORY_TASK_MIN_TIME select _factoryIndex;
-                        _maxTime = CRATE_FACTORY_TASK_MAX_TIME select _factoryIndex;
-                        _midpoint = (_minTime + _maxTime) / 2;
-
-                        if (_elapsedTime < _midpoint) then {
-                            _minTime = _minTime + 3600;
-                            _maxTime = 21600;
-                            systemChat format ["Factory %1: Task completed early! Next task window: %2min-%3min", _factoryIndex + 1, round(_minTime/60), round(_maxTime/60)];
-                        } else {
-                            _maxTime = (_maxTime - 3600) max 1800;
-                            _minTime = 1800;
-                            systemChat format ["Factory %1: Task completed late! Next task window: %2min-%3min", _factoryIndex + 1, round(_minTime/60), round(_maxTime/60)];
-                        };
-
-                        CRATE_FACTORY_TASK_MIN_TIME set [_factoryIndex, _minTime];
-                        CRATE_FACTORY_TASK_MAX_TIME set [_factoryIndex, _maxTime];
-
                         CRATE_FACTORY_TASK_PENDING set [_factoryIndex, false];
                         CRATE_FACTORY_TASK_TYPE set [_factoryIndex, ""];
                         CRATE_FACTORY_TASK_ID set [_factoryIndex, ""];
-                        CRATE_FACTORY_TASK_START_TIME set [_factoryIndex, 0];
                         _currentMorale = CRATE_FACTORY_MORALE select _factoryIndex;
                         _newMorale = (_currentMorale + 2) min 100;
                         CRATE_FACTORY_MORALE set [_factoryIndex, _newMorale];
-                        CRATE_FACTORY_TASK_TIMER set [_factoryIndex, (_minTime + random (_maxTime - _minTime))];
 
                         _fires = CRATE_FACTORY_FIRES select _factoryIndex;
                         {deleteVehicle _x} forEach _fires;
                         CRATE_FACTORY_FIRES set [_factoryIndex, []];
                         CRATE_FACTORY_OPFOR_SPAWNED set [_factoryIndex, false];
+
+                        systemChat format ["Factory %1: Task complete! Morale improving.", _factoryIndex + 1];
                     } else {
                         _currentMorale = CRATE_FACTORY_MORALE select _factoryIndex;
                         _newMorale = (_currentMorale - 0.1) max 0;
@@ -1066,6 +1059,8 @@ player addAction ["Open Crate Spawner", {
         CRATE_FACTORY_TASK_TYPE deleteAt _selectedIndex;
         CRATE_FACTORY_TASK_ID deleteAt _selectedIndex;
         CRATE_FACTORY_TASK_TIMER deleteAt _selectedIndex;
+        CRATE_FACTORY_TASK_MIN_TIME deleteAt _selectedIndex;
+        CRATE_FACTORY_TASK_MAX_TIME deleteAt _selectedIndex;
         CRATE_FACTORY_OPFOR_SPAWNED deleteAt _selectedIndex;
         CRATE_FACTORY_LEVEL deleteAt _selectedIndex;
         CRATE_SELECTED_FACTORY = -1;
@@ -1154,6 +1149,8 @@ player addAction ["Open Crate Spawner", {
         CRATE_FACTORY_TASK_TYPE = [];
         CRATE_FACTORY_TASK_ID = [];
         CRATE_FACTORY_TASK_TIMER = [];
+        CRATE_FACTORY_TASK_MIN_TIME = [];
+        CRATE_FACTORY_TASK_MAX_TIME = [];
         CRATE_FACTORY_OPFOR_SPAWNED = [];
         CRATE_FACTORY_LEVEL = [];
         CRATE_SELECTED_FACTORY = -1;
