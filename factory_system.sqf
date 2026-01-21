@@ -273,7 +273,7 @@ player addAction ["Open Crate Spawner", {
                 _costMessage = "Cost: FREE (First town factory)";
             } else {
                 _foodCost = 3; _waterCost = 3; _woodCost = 5;
-                _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
+                _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_brown_idap_F"], 100];
                 _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
                 _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
 
@@ -296,7 +296,7 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Mineral") then {
             _foodCost = 8; _waterCost = 10; _woodCost = 15;
-            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
+            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_brown_idap_F"], 100];
             _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
 
@@ -318,7 +318,7 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Powerplant") then {
             _foodCost = 10; _waterCost = 10; _woodCost = 15; _metalCost = 15; _coalCost = 20; _ironCost = 5; _fishCost = 5;
-            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
+            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_brown_idap_F"], 100];
             _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
             _nearMetal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
@@ -352,7 +352,7 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Vehicle") then {
             _foodCost = 12; _waterCost = 12; _woodCost = 20; _metalCost = 30; _coalCost = 15; _energyCost = 25; _ironCost = 10; _diamondCost = 5; _fishCost = 8; _oilCost = 8; _goldCost = 5; _electronicsCost = 10;
-            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
+            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_brown_idap_F"], 100];
             _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
             _nearMetal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
@@ -401,7 +401,7 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Pier") then {
             _foodCost = 10; _waterCost = 12; _woodCost = 18;
-            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
+            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_brown_idap_F"], 100];
             _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
 
@@ -525,7 +525,7 @@ player addAction ["Open Crate Spawner", {
             if (_nextLevel == 5) then {_foodCost = 45; _waterCost = 45; _woodCost = 50; _metalCost = 50; _coalCost = 30; _energyCost = 40; _ironCost = 25; _diamondCost = 15; _goldCost = 20; _oilCost = 20; _electronicsCost = 25; _fuelTankCost = 12; _wheelCost = 12; _enginePartCost = 12};
         };
 
-        _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
+        _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_brown_idap_F"], 50];
         _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
         _nearWood = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 50];
         _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
@@ -617,7 +617,7 @@ player addAction ["Open Crate Spawner", {
             _waterCost = _baseCost + floor(random 3);
             _woodCost = _baseCost + floor(random 3);
             _elecCost = _baseCost + floor(random 2);
-            _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
+            _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_brown_idap_F"], 50];
             _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
             _nearWood = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 50];
             _nearElec = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 50];
@@ -912,7 +912,7 @@ player addAction ["Open Crate Spawner", {
                             _crate = _crateType createVehicle _spawnPos;
                             _crate setPos _spawnPos;
 
-                            if (_crateType == "Land_FoodSacks_01_large_white_idap_F") then {
+                            if (_crateType == "Land_FoodSacks_01_large_brown_idap_F") then {
                                 _inventoryBox = "Box_IND_AmmoVeh_F" createVehicle _spawnPos;
                                 _inventoryBox attachTo [_crate, [0, 0, 0]];
                                 hideObjectGlobal _inventoryBox;
@@ -1358,7 +1358,7 @@ player addAction ["Open Crate Spawner", {
                     lbClear _comboType;
                     if (_factoryType == "Town") then {
                         _comboType lbAdd "Food";
-                        _comboType lbSetData [0, "Land_FoodSacks_01_large_white_idap_F"];
+                        _comboType lbSetData [0, "Land_FoodSacks_01_large_brown_idap_F"];
                         _comboType lbAdd "Water";
                         _comboType lbSetData [1, "Land_PaperBox_01_open_water_F"];
                         _comboType lbAdd "Wood";
@@ -1534,16 +1534,35 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                 // Start countdown when all items dropped
                 if (_newCount <= 0 && !(_crate getVariable ["countdownStarted", false])) then {
                     _crate setVariable ["countdownStarted", true, true];
-                    _crate setVariable ["countdownTime", 60, true];
+                    _crate setVariable ["countdownTime", 300, true];
+                    _crate setVariable ["initialDroppedCount", count _droppedItems, true];
+                    _crate setVariable ["deletedItemsCount", 0, true];
                 };
             };
 
-            // Countdown and deletion system
+            // Countdown and progressive deletion system
             _countdownStarted = _crate getVariable ["countdownStarted", false];
             if (_countdownStarted) then {
-                _countdownTime = _crate getVariable ["countdownTime", 60];
+                _countdownTime = _crate getVariable ["countdownTime", 300];
+                _initialCount = _crate getVariable ["initialDroppedCount", 10];
+                _deletedCount = _crate getVariable ["deletedItemsCount", 0];
+
                 _countdownTime = _countdownTime - 5;
                 _crate setVariable ["countdownTime", _countdownTime, true];
+
+                _timePerItem = 300 / _initialCount;
+                _itemsToDelete = floor((300 - _countdownTime) / _timePerItem);
+
+                if (_itemsToDelete > _deletedCount && _itemsToDelete <= count _droppedItems) then {
+                    for "_i" from _deletedCount to (_itemsToDelete - 1) do {
+                        if (_i < count _droppedItems) then {
+                            _itemToDelete = _droppedItems select _i;
+                            deleteVehicle _itemToDelete;
+                            DROPPED_ITEMS_GLOBAL = DROPPED_ITEMS_GLOBAL - [_itemToDelete];
+                        };
+                    };
+                    _crate setVariable ["deletedItemsCount", _itemsToDelete, true];
+                };
 
                 if (_countdownTime <= 0) then {
                     {deleteVehicle _x} forEach _droppedItems;
@@ -1633,7 +1652,8 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                                 // Cancel countdown if items are returned
                                 if (_newCount > 0) then {
                                     _crate setVariable ["countdownStarted", false, true];
-                                    _crate setVariable ["countdownTime", 60, true];
+                                    _crate setVariable ["countdownTime", 300, true];
+                                    _crate setVariable ["deletedItemsCount", 0, true];
                                 };
 
                                 if (!isNull _inventoryBox) then {
