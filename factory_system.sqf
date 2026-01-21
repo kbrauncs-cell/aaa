@@ -1534,42 +1534,52 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                 // Start countdown when all items dropped
                 if (_newCount <= 0 && !(_crate getVariable ["countdownStarted", false])) then {
                     _crate setVariable ["countdownStarted", true, true];
+                    _crate setVariable ["graceTime", 1800, true];
                     _crate setVariable ["countdownTime", 3600, true];
                     _crate setVariable ["initialDroppedCount", count _droppedItems, true];
                     _crate setVariable ["deletedItemsCount", 0, true];
                 };
             };
 
-            // Countdown and progressive deletion system
+            // Grace period and countdown system
             _countdownStarted = _crate getVariable ["countdownStarted", false];
             if (_countdownStarted) then {
-                _countdownTime = _crate getVariable ["countdownTime", 3600];
-                _initialCount = _crate getVariable ["initialDroppedCount", 10];
-                _deletedCount = _crate getVariable ["deletedItemsCount", 0];
+                _graceTime = _crate getVariable ["graceTime", 1800];
 
-                _countdownTime = _countdownTime - 5;
-                _crate setVariable ["countdownTime", _countdownTime, true];
+                // Grace period countdown (30 minutes before deletion starts)
+                if (_graceTime > 0) then {
+                    _graceTime = _graceTime - 5;
+                    _crate setVariable ["graceTime", _graceTime, true];
+                } else {
+                    // Deletion countdown (1 hour progressive deletion)
+                    _countdownTime = _crate getVariable ["countdownTime", 3600];
+                    _initialCount = _crate getVariable ["initialDroppedCount", 10];
+                    _deletedCount = _crate getVariable ["deletedItemsCount", 0];
 
-                _timePerItem = 3600 / _initialCount;
-                _itemsToDelete = floor((3600 - _countdownTime) / _timePerItem);
+                    _countdownTime = _countdownTime - 5;
+                    _crate setVariable ["countdownTime", _countdownTime, true];
 
-                if (_itemsToDelete > _deletedCount && _itemsToDelete <= count _droppedItems) then {
-                    for "_i" from _deletedCount to (_itemsToDelete - 1) do {
-                        if (_i < count _droppedItems) then {
-                            _itemToDelete = _droppedItems select _i;
-                            deleteVehicle _itemToDelete;
-                            DROPPED_ITEMS_GLOBAL = DROPPED_ITEMS_GLOBAL - [_itemToDelete];
+                    _timePerItem = 3600 / _initialCount;
+                    _itemsToDelete = floor((3600 - _countdownTime) / _timePerItem);
+
+                    if (_itemsToDelete > _deletedCount && _itemsToDelete <= count _droppedItems) then {
+                        for "_i" from _deletedCount to (_itemsToDelete - 1) do {
+                            if (_i < count _droppedItems) then {
+                                _itemToDelete = _droppedItems select _i;
+                                deleteVehicle _itemToDelete;
+                                DROPPED_ITEMS_GLOBAL = DROPPED_ITEMS_GLOBAL - [_itemToDelete];
+                            };
                         };
+                        _crate setVariable ["deletedItemsCount", _itemsToDelete, true];
                     };
-                    _crate setVariable ["deletedItemsCount", _itemsToDelete, true];
-                };
 
-                if (_countdownTime <= 0) then {
-                    {deleteVehicle _x} forEach _droppedItems;
-                    DROPPED_ITEMS_GLOBAL = DROPPED_ITEMS_GLOBAL - _droppedItems;
-                    if (!isNull _inventoryBox) then {deleteVehicle _inventoryBox};
-                    deleteVehicle _crate;
-                    FOOD_WATER_CRATES = FOOD_WATER_CRATES - [_crate];
+                    if (_countdownTime <= 0) then {
+                        {deleteVehicle _x} forEach _droppedItems;
+                        DROPPED_ITEMS_GLOBAL = DROPPED_ITEMS_GLOBAL - _droppedItems;
+                        if (!isNull _inventoryBox) then {deleteVehicle _inventoryBox};
+                        deleteVehicle _crate;
+                        FOOD_WATER_CRATES = FOOD_WATER_CRATES - [_crate];
+                    };
                 };
             };
         } forEach FOOD_WATER_CRATES;
@@ -1652,6 +1662,7 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                                 // Cancel countdown if items are returned
                                 if (_newCount > 0) then {
                                     _crate setVariable ["countdownStarted", false, true];
+                                    _crate setVariable ["graceTime", 1800, true];
                                     _crate setVariable ["countdownTime", 3600, true];
                                     _crate setVariable ["deletedItemsCount", 0, true];
                                 };
