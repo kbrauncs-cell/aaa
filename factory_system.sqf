@@ -626,13 +626,15 @@ player addAction ["Open Crate Spawner", {
             _foodValue = 0;
             {
                 _itemCount = _x getVariable ["crateItemCount", 250];
-                _foodValue = _foodValue + (_itemCount / 250);
+                _maxCapacity = _x getVariable ["crateMaxCapacity", 250];
+                _foodValue = _foodValue + (_itemCount / _maxCapacity);
             } forEach _nearFood;
 
             _waterValue = 0;
             {
                 _itemCount = _x getVariable ["crateItemCount", 250];
-                _waterValue = _waterValue + (_itemCount / 250);
+                _maxCapacity = _x getVariable ["crateMaxCapacity", 250];
+                _waterValue = _waterValue + (_itemCount / _maxCapacity);
             } forEach _nearWater;
 
             _missingResources = [];
@@ -923,6 +925,8 @@ player addAction ["Open Crate Spawner", {
                                 _inventoryBox addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", 250];
                                 _crate setVariable ["inventoryBox", _inventoryBox, true];
                                 _crate setVariable ["crateItemCount", 250, true];
+                                _crate setVariable ["crateMaxCapacity", 250, true];
+                                _crate setVariable ["crateMaxDrops", 10, true];
                                 _crate setVariable ["crateItemType", "food", true];
                                 _crate setVariable ["droppedItems", [], true];
                                 _crate setVariable ["nextDropTime", time + (300 + random 600), true];
@@ -944,6 +948,8 @@ player addAction ["Open Crate Spawner", {
                                 _inventoryBox addItemCargoGlobal ["ACE_WaterBottle", 250];
                                 _crate setVariable ["inventoryBox", _inventoryBox, true];
                                 _crate setVariable ["crateItemCount", 250, true];
+                                _crate setVariable ["crateMaxCapacity", 250, true];
+                                _crate setVariable ["crateMaxDrops", 10, true];
                                 _crate setVariable ["crateItemType", "water", true];
                                 _crate setVariable ["droppedItems", [], true];
                                 _crate setVariable ["nextDropTime", time + (300 + random 600), true];
@@ -1499,7 +1505,10 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
             _droppedItems = _droppedItems select {!isNull _x};
             _crate setVariable ["droppedItems", _droppedItems, true];
 
-            if (time >= _nextDropTime && count _droppedItems < 10 && _itemCount > 0) then {
+            _maxCapacity = _crate getVariable ["crateMaxCapacity", 250];
+            _maxDrops = _crate getVariable ["crateMaxDrops", 10];
+
+            if (time >= _nextDropTime && count _droppedItems < _maxDrops && _itemCount > 0) then {
                 _dropClass = if (_itemType == "food") then {"Land_FoodSack_01_full_brown_idap_F"} else {"Land_WaterBottle_01_pack_F"};
                 _randomDist = 3 + random 8;
                 _randomAngle = random 360;
@@ -1513,8 +1522,8 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                 _crate setVariable ["nextDropTime", time + (300 + random 600), true];
                 DROPPED_ITEMS_GLOBAL pushBackUnique _droppedItem;
 
-                // Remove 25 items from crate when dropping (250/10 = 25)
-                _removeAmount = 25;
+                // Remove items dynamically based on max capacity / max drops
+                _removeAmount = floor(_maxCapacity / _maxDrops);
                 _newCount = (_itemCount - _removeAmount) max 0;
                 _crate setVariable ["crateItemCount", _newCount, true];
                 if (!isNull _inventoryBox) then {
@@ -1651,12 +1660,14 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                                 _droppedItems = _droppedItems - [_item];
                                 _crate setVariable ["droppedItems", _droppedItems, true];
                                 DROPPED_ITEMS_GLOBAL = DROPPED_ITEMS_GLOBAL - [_item];
-                                
+
                                 _itemCount = _crate getVariable ["crateItemCount", 0];
                                 _itemType = _crate getVariable ["crateItemType", "food"];
                                 _inventoryBox = _crate getVariable ["inventoryBox", objNull];
-                                _returnAmount = 25;
-                                _newCount = (_itemCount + _returnAmount) min 250;
+                                _maxCapacity = _crate getVariable ["crateMaxCapacity", 250];
+                                _maxDrops = _crate getVariable ["crateMaxDrops", 10];
+                                _returnAmount = floor(_maxCapacity / _maxDrops);
+                                _newCount = (_itemCount + _returnAmount) min _maxCapacity;
                                 _crate setVariable ["crateItemCount", _newCount, true];
 
                                 // Cancel countdown if items are returned
@@ -1679,7 +1690,7 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
 
                                 player removeAction _actionId;
                                 _item setVariable ["hasReturnAction", false, true];
-                                systemChat "Item returned to crate! +25 items";
+                                systemChat format ["Item returned to crate! +%1 items", _returnAmount];
                             },
                             [_item, _parentCrate],
                             1.5,
