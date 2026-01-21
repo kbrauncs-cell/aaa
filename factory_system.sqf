@@ -48,6 +48,9 @@ player addAction ["Open Crate Spawner", {
     if (isNil "CRATE_FACTORY_OPFOR_SPAWNED") then {CRATE_FACTORY_OPFOR_SPAWNED = []};
     if (isNil "CRATE_MOUSE_POS") then {CRATE_MOUSE_POS = []};
     if (isNil "CRATE_FACTORY_LEVEL") then {CRATE_FACTORY_LEVEL = []};
+    if (isNil "FOOD_WATER_CRATES") then {FOOD_WATER_CRATES = []};
+    if (isNil "DROPPED_ITEMS_GLOBAL") then {DROPPED_ITEMS_GLOBAL = []};
+    if (isNil "PLAYER_CARRYING_ITEM") then {PLAYER_CARRYING_ITEM = objNull};
 
     _map ctrlAddEventHandler ["MouseMoving", {
         params ["_control", "_xPos", "_yPos"];
@@ -617,9 +620,21 @@ player addAction ["Open Crate Spawner", {
             _nearElec = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 50];
             _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
 
+            _foodValue = 0;
+            {
+                _itemCount = _x getVariable ["crateItemCount", 250];
+                _foodValue = _foodValue + (_itemCount / 250);
+            } forEach _nearFood;
+
+            _waterValue = 0;
+            {
+                _itemCount = _x getVariable ["crateItemCount", 250];
+                _waterValue = _waterValue + (_itemCount / 250);
+            } forEach _nearWater;
+
             _missingResources = [];
-            if (count _nearFood < _foodCost) then {_missingResources pushBack ("Food: " + str(_foodCost))};
-            if (count _nearWater < _waterCost) then {_missingResources pushBack ("Water: " + str(_waterCost))};
+            if (_foodValue < _foodCost) then {_missingResources pushBack ("Food: need " + str(_foodCost) + " value, have " + str(floor(_foodValue * 10) / 10))};
+            if (_waterValue < _waterCost) then {_missingResources pushBack ("Water: need " + str(_waterCost) + " value, have " + str(floor(_waterValue * 10) / 10))};
             if (count _nearWood < _woodCost) then {_missingResources pushBack ("Wood: " + str(_woodCost))};
             if (count _nearElec < _elecCost) then {_missingResources pushBack ("Elec: " + str(_elecCost))};
             if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: " + str(_metalCost))};
@@ -628,8 +643,8 @@ player addAction ["Open Crate Spawner", {
                 systemChat ("Missing: " + (_missingResources joinString " | "));
             };
 
-            for "_i" from 0 to (_foodCost - 1) do {deleteVehicle (_nearFood select _i)};
-            for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWater select _i)};
+            {deleteVehicle _x} forEach _nearFood;
+            {deleteVehicle _x} forEach _nearWater;
             for "_i" from 0 to (_woodCost - 1) do {deleteVehicle (_nearWood select _i)};
             for "_i" from 0 to (_elecCost - 1) do {deleteVehicle (_nearElec select _i)};
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
@@ -650,9 +665,15 @@ player addAction ["Open Crate Spawner", {
             _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
             _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
 
+            _waterValue = 0;
+            {
+                _itemCount = _x getVariable ["crateItemCount", 250];
+                _waterValue = _waterValue + (_itemCount / 250);
+            } forEach _nearWater;
+
             _missingResources = [];
             if (count _nearCoal < _coalCost) then {_missingResources pushBack ("Coal: " + str(_coalCost))};
-            if (count _nearWater < _waterCost) then {_missingResources pushBack ("Water: " + str(_waterCost))};
+            if (_waterValue < _waterCost) then {_missingResources pushBack ("Water: need " + str(_waterCost) + " value, have " + str(floor(_waterValue * 10) / 10))};
             if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: " + str(_metalCost))};
 
             if (count _missingResources > 0) exitWith {
@@ -660,7 +681,7 @@ player addAction ["Open Crate Spawner", {
             };
 
             for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoal select _i)};
-            for "_i" from 0 to (_waterCost - 1) do {deleteVehicle (_nearWater select _i)};
+            {deleteVehicle _x} forEach _nearWater;
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
 
             CRATE_FACTORY_COAL set [_selectedIndex, 100];
@@ -875,6 +896,26 @@ player addAction ["Open Crate Spawner", {
                             };
                             _crate = _crateType createVehicle _spawnPos;
                             _crate setPos _spawnPos;
+
+                            if (_crateType == "Land_FoodSacks_01_large_white_idap_F") then {
+                                clearItemCargoGlobal _crate;
+                                _crate addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", 250];
+                                _crate setVariable ["crateItemCount", 250, true];
+                                _crate setVariable ["crateItemType", "food", true];
+                                _crate setVariable ["droppedItems", [], true];
+                                _crate setVariable ["nextDropTime", time + (300 + random 600), true];
+                                FOOD_WATER_CRATES pushBack _crate;
+                            };
+                            if (_crateType == "Land_PaperBox_01_open_water_F") then {
+                                clearItemCargoGlobal _crate;
+                                _crate addItemCargoGlobal ["ACE_WaterBottle", 250];
+                                _crate setVariable ["crateItemCount", 250, true];
+                                _crate setVariable ["crateItemType", "water", true];
+                                _crate setVariable ["droppedItems", [], true];
+                                _crate setVariable ["nextDropTime", time + (300 + random 600), true];
+                                FOOD_WATER_CRATES pushBack _crate;
+                            };
+
                             _spawnedCrates = CRATE_FACTORY_SPAWNEDCRATES select _factoryIndex;
                             _spawnedCrates pushBack _crate;
                             CRATE_FACTORY_SPAWNEDCRATES set [_factoryIndex, _spawnedCrates];
@@ -926,6 +967,14 @@ player addAction ["Open Crate Spawner", {
                                 };
                                 _crate = _crateType createVehicle _spawnPos;
                                 _crate setPos _spawnPos;
+
+                                if (_crateType == "B_Slingload_01_Fuel_F") then {
+                                    [_crate, 100] call ace_refuel_fnc_setFuel;
+                                };
+                                if (_crateType == "B_Slingload_01_Ammo_F") then {
+                                    [_crate, 50] call ace_rearm_fnc_setSupplyCount;
+                                };
+
                                 _spawnedCrates = CRATE_FACTORY_SPAWNEDCRATES select _factoryIndex;
                                 _spawnedCrates pushBack _crate;
                                 CRATE_FACTORY_SPAWNEDCRATES set [_factoryIndex, _spawnedCrates];
@@ -1281,6 +1330,10 @@ player addAction ["Open Crate Spawner", {
                         _comboType lbSetData [0, "Land_PortableServer_01_sand_F"];
                         _comboType lbAdd "Electronics";
                         _comboType lbSetData [1, "Land_PaperBox_01_open_boxes_F"];
+                        _comboType lbAdd "Fuel";
+                        _comboType lbSetData [2, "B_Slingload_01_Fuel_F"];
+                        _comboType lbAdd "Ammo";
+                        _comboType lbSetData [3, "B_Slingload_01_Ammo_F"];
                     };
                     if (_factoryType == "Vehicle") then {
                         _comboType lbAdd "Small Fuel Tank";
@@ -1299,6 +1352,8 @@ player addAction ["Open Crate Spawner", {
                         _comboType lbSetData [2, "Land_PaperBox_open_full_F"];
                         _comboType lbAdd "Diamonds (120min)";
                         _comboType lbSetData [3, "Land_Boxloader_Fort_iso_Brown"];
+                        _comboType lbAdd "Gunpowder (75min)";
+                        _comboType lbSetData [4, "Land_Pallet_MilBoxes_F"];
                     };
                     if (_factoryType == "Pier") then {
                         _comboType lbAdd "Fish (15min)";
@@ -1368,3 +1423,193 @@ player addAction ["Open Crate Spawner", {
 }];
 
 systemChat "Factory Manager loaded! Hover over factories for info.";
+
+// Background monitoring for Food/Water crates - Rain damage and item dropping
+[] spawn {
+    while {true} do {
+        sleep 5;
+        FOOD_WATER_CRATES = FOOD_WATER_CRATES select {!isNull _x};
+        {
+            _crate = _x;
+            _itemCount = _crate getVariable ["crateItemCount", 250];
+            _itemType = _crate getVariable ["crateItemType", "food"];
+            _cratePos = getPosATL _crate;
+
+            // Rain damage
+            if (rain > 0.1 && _itemCount > 0) then {
+                _damageAmount = floor(1 + (rain * 2));
+                _newCount = (_itemCount - _damageAmount) max 0;
+                _crate setVariable ["crateItemCount", _newCount, true];
+                if (_itemType == "food") then {
+                    clearItemCargoGlobal _crate;
+                    if (_newCount > 0) then {
+                        _crate addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", _newCount];
+                    };
+                } else {
+                    clearItemCargoGlobal _crate;
+                    if (_newCount > 0) then {
+                        _crate addItemCargoGlobal ["ACE_WaterBottle", _newCount];
+                    };
+                };
+            };
+
+            // Random item dropping
+            _nextDropTime = _crate getVariable ["nextDropTime", 0];
+            _droppedItems = _crate getVariable ["droppedItems", []];
+            _droppedItems = _droppedItems select {!isNull _x};
+            _crate setVariable ["droppedItems", _droppedItems, true];
+
+            if (time >= _nextDropTime && count _droppedItems < 15 && _itemCount > 0) then {
+                _dropClass = if (_itemType == "food") then {"Land_FoodSack_01_full_brown_idap_F"} else {"Land_WaterBottle_01_pack_F"};
+                _randomDist = 3 + random 8;
+                _randomAngle = random 360;
+                _dropPos = [(_cratePos select 0) + (_randomDist * cos _randomAngle), (_cratePos select 1) + (_randomDist * sin _randomAngle), 0];
+                _droppedItem = _dropClass createVehicle _dropPos;
+                _droppedItem setPos _dropPos;
+                _droppedItem setVariable ["parentCrate", _crate, true];
+                _droppedItem setVariable ["itemType", _itemType, true];
+                _droppedItems pushBack _droppedItem;
+                _crate setVariable ["droppedItems", _droppedItems, true];
+                _crate setVariable ["nextDropTime", time + (180 + random 420), true];
+                DROPPED_ITEMS_GLOBAL pushBackUnique _droppedItem;
+
+                // Remove items from crate when dropping
+                _removeAmount = 1 + floor(random 3);
+                _newCount = (_itemCount - _removeAmount) max 0;
+                _crate setVariable ["crateItemCount", _newCount, true];
+                if (_itemType == "food") then {
+                    clearItemCargoGlobal _crate;
+                    if (_newCount > 0) then {
+                        _crate addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", _newCount];
+                    };
+                } else {
+                    clearItemCargoGlobal _crate;
+                    if (_newCount > 0) then {
+                        _crate addItemCargoGlobal ["ACE_WaterBottle", _newCount];
+                    };
+                };
+            };
+        } forEach FOOD_WATER_CRATES;
+    };
+};
+
+// Pickup and return system with visual lines
+[] spawn {
+    while {true} do {
+        sleep 0.1;
+        DROPPED_ITEMS_GLOBAL = DROPPED_ITEMS_GLOBAL select {!isNull _x};
+        
+        {
+            _item = _x;
+            _itemPos = getPosATL _item;
+            _playerPos = getPosATL player;
+            _parentCrate = _item getVariable ["parentCrate", objNull];
+            
+            if (_playerPos distance2D _itemPos < 2 && isNull PLAYER_CARRYING_ITEM) then {
+                _item setVariable ["nearPlayer", true, true];
+                if (!(_item getVariable ["hasPickupAction", false])) then {
+                    _pickupAction = player addAction [
+                        "<t color='#00ff00'>Pick up item</t>",
+                        {
+                            params ["_target", "_caller", "_actionId", "_item"];
+                            PLAYER_CARRYING_ITEM = _item;
+                            _item attachTo [player, [0, 0.5, 0.5]];
+                            _item setVariable ["pickedUp", true, true];
+                            player removeAction _actionId;
+                            _item setVariable ["hasPickupAction", false, true];
+                        },
+                        _item,
+                        1.5,
+                        true,
+                        true,
+                        "",
+                        "true",
+                        2
+                    ];
+                    _item setVariable ["pickupActionId", _pickupAction, true];
+                    _item setVariable ["hasPickupAction", true, true];
+                };
+            } else {
+                if (_item getVariable ["hasPickupAction", false]) then {
+                    _actionId = _item getVariable ["pickupActionId", -1];
+                    if (_actionId >= 0) then {
+                        player removeAction _actionId;
+                    };
+                    _item setVariable ["hasPickupAction", false, true];
+                };
+            };
+            
+            if (!isNull PLAYER_CARRYING_ITEM && PLAYER_CARRYING_ITEM == _item && !isNull _parentCrate) then {
+                
+                if (_playerPos distance2D _cratePos < 2) then {
+                    if (!(_item getVariable ["hasReturnAction", false])) then {
+                        _returnAction = player addAction [
+                            "<t color='#00ff00'>Return item to crate</t>",
+                            {
+                                params ["_target", "_caller", "_actionId", "_args"];
+                                _item = _args select 0;
+                                _crate = _args select 1;
+                                detach _item;
+                                deleteVehicle _item;
+                                PLAYER_CARRYING_ITEM = objNull;
+                                
+                                _droppedItems = _crate getVariable ["droppedItems", []];
+                                _droppedItems = _droppedItems - [_item];
+                                _crate setVariable ["droppedItems", _droppedItems, true];
+                                DROPPED_ITEMS_GLOBAL = DROPPED_ITEMS_GLOBAL - [_item];
+                                
+                                _itemCount = _crate getVariable ["crateItemCount", 0];
+                                _itemType = _crate getVariable ["crateItemType", "food"];
+                                _returnAmount = 1 + floor(random 3);
+                                _newCount = (_itemCount + _returnAmount) min 250;
+                                _crate setVariable ["crateItemCount", _newCount, true];
+                                if (_itemType == "food") then {
+                                    clearItemCargoGlobal _crate;
+                                    _crate addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", _newCount];
+                                } else {
+                                    clearItemCargoGlobal _crate;
+                                    _crate addItemCargoGlobal ["ACE_WaterBottle", _newCount];
+                                };
+                                
+                                player removeAction _actionId;
+                                _item setVariable ["hasReturnAction", false, true];
+                                systemChat "Item returned to crate!";
+                            },
+                            [_item, _parentCrate],
+                            1.5,
+                            true,
+                            true,
+                            "",
+                            "true",
+                            2
+                        ];
+                        _item setVariable ["returnActionId", _returnAction, true];
+                        _item setVariable ["hasReturnAction", true, true];
+                    };
+                } else {
+                    if (_item getVariable ["hasReturnAction", false]) then {
+                        _actionId = _item getVariable ["returnActionId", -1];
+                        if (_actionId >= 0) then {
+                            player removeAction _actionId;
+                        };
+                        _item setVariable ["hasReturnAction", false, true];
+                    };
+                };
+            };
+        } forEach DROPPED_ITEMS_GLOBAL;
+    };
+};
+
+// Draw lines from player to crate when carrying items
+addMissionEventHandler ["Draw3D", {
+    if (!isNull PLAYER_CARRYING_ITEM) then {
+        _parentCrate = PLAYER_CARRYING_ITEM getVariable ["parentCrate", objNull];
+        if (!isNull _parentCrate) then {
+            _playerPos = getPosATL player;
+            _cratePos = getPosATL _parentCrate;
+            if (_playerPos distance2D _cratePos < 15) then {
+                drawLine3D [_playerPos, _cratePos, [0, 1, 0, 0.5]];
+            };
+        };
+    };
+}];
