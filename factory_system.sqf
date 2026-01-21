@@ -231,11 +231,11 @@ player addAction ["Open Crate Spawner", {
         };
 
         if (_factoryType == "Powerplant") then {
-            _costText = "<t size='0.8'>Cost:<br/>10 Food | 10 Water | 15 Wood<br/>15 Metal | 20 Coal | 8 Energy</t>";
+            _costText = "<t size='0.7'>Cost:<br/>10F 10W 15Wood 15Metal 20Coal 8Energy<br/>5 Iron | 5 Fish</t>";
         };
 
         if (_factoryType == "Vehicle") then {
-            _costText = "<t size='0.8'>Cost:<br/>12 Food | 12 Water | 20 Wood<br/>30 Metal | 15 Coal | 25 Energy</t>";
+            _costText = "<t size='0.65'>Cost:<br/>12F 12W 20Wood 30Metal 15Coal 25Energy<br/>10Iron 5Diamonds 8Fish 8Oil 5Gold 10Electronics</t>";
         };
 
         _labelCost ctrlSetStructuredText parseText _costText;
@@ -323,13 +323,15 @@ player addAction ["Open Crate Spawner", {
         };
 
         if (_factoryType == "Powerplant") then {
-            _foodCost = 10; _waterCost = 10; _woodCost = 15; _metalCost = 15; _coalCost = 20; _energyCost = 8;
+            _foodCost = 10; _waterCost = 10; _woodCost = 15; _metalCost = 15; _coalCost = 20; _energyCost = 8; _ironCost = 5; _fishCost = 5;
             _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
             _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
             _nearMetal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
             _nearCoal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_closed_F"], 100];
             _nearEnergy = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PortableServer_01_sand_F"], 100];
+            _nearIron = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_open_full_F"], 100];
+            _nearFish = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodenBox_02_F"], 100];
 
             _missingResources = [];
             if (count _nearFood < _foodCost) then {_missingResources pushBack ("Food: need " + str(_foodCost) + ", found " + str(count _nearFood))};
@@ -338,6 +340,8 @@ player addAction ["Open Crate Spawner", {
             if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: need " + str(_metalCost) + ", found " + str(count _nearMetal))};
             if (count _nearCoal < _coalCost) then {_missingResources pushBack ("Coal: need " + str(_coalCost) + ", found " + str(count _nearCoal))};
             if (count _nearEnergy < _energyCost) then {_missingResources pushBack ("Energy: need " + str(_energyCost) + ", found " + str(count _nearEnergy))};
+            if (count _nearIron < _ironCost) then {_missingResources pushBack ("Iron: need " + str(_ironCost) + ", found " + str(count _nearIron))};
+            if (count _nearFish < _fishCost) then {_missingResources pushBack ("Fish: need " + str(_fishCost) + ", found " + str(count _nearFish))};
 
             if (count _missingResources > 0) exitWith {
                 systemChat ("Missing resources: " + (_missingResources joinString " | "));
@@ -349,18 +353,26 @@ player addAction ["Open Crate Spawner", {
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
             for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoal select _i)};
             for "_i" from 0 to (_energyCost - 1) do {deleteVehicle (_nearEnergy select _i)};
-            _costMessage = "Cost: 10 Food + 10 Water + 15 Wood + 15 Metal + 20 Coal + 8 Energy";
+            for "_i" from 0 to (_ironCost - 1) do {deleteVehicle (_nearIron select _i)};
+            for "_i" from 0 to (_fishCost - 1) do {deleteVehicle (_nearFish select _i)};
+            _costMessage = "Cost: 10 Food + 10 Water + 15 Wood + 15 Metal + 20 Coal + 8 Energy + 5 Iron + 5 Fish";
             _canSpawn = true;
         };
 
         if (_factoryType == "Vehicle") then {
-            _foodCost = 12; _waterCost = 12; _woodCost = 20; _metalCost = 30; _coalCost = 15; _energyCost = 25;
+            _foodCost = 12; _waterCost = 12; _woodCost = 20; _metalCost = 30; _coalCost = 15; _energyCost = 25; _ironCost = 10; _diamondCost = 5; _fishCost = 8; _oilCost = 8; _goldCost = 5; _electronicsCost = 10;
             _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
             _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
             _nearMetal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
             _nearCoal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_closed_F"], 100];
             _nearEnergy = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PortableServer_01_sand_F"], 100];
+            _nearIron = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_open_full_F"], 100];
+            _nearDiamond = nearestObjects [CRATE_PENDING_LOCATION, ["Land_Boxloader_Fort_iso_Brown"], 100];
+            _nearFish = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodenBox_02_F"], 100];
+            _nearOil = nearestObjects [CRATE_PENDING_LOCATION, ["CargoNet_01_barrels_F"], 100];
+            _nearGold = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CratesWooden_F"], 100];
+            _nearElectronics = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_boxes_F"], 100];
 
             _missingResources = [];
             if (count _nearFood < _foodCost) then {_missingResources pushBack ("Food: need " + str(_foodCost) + ", found " + str(count _nearFood))};
@@ -369,6 +381,12 @@ player addAction ["Open Crate Spawner", {
             if (count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: need " + str(_metalCost) + ", found " + str(count _nearMetal))};
             if (count _nearCoal < _coalCost) then {_missingResources pushBack ("Coal: need " + str(_coalCost) + ", found " + str(count _nearCoal))};
             if (count _nearEnergy < _energyCost) then {_missingResources pushBack ("Energy: need " + str(_energyCost) + ", found " + str(count _nearEnergy))};
+            if (count _nearIron < _ironCost) then {_missingResources pushBack ("Iron: need " + str(_ironCost) + ", found " + str(count _nearIron))};
+            if (count _nearDiamond < _diamondCost) then {_missingResources pushBack ("Diamonds: need " + str(_diamondCost) + ", found " + str(count _nearDiamond))};
+            if (count _nearFish < _fishCost) then {_missingResources pushBack ("Fish: need " + str(_fishCost) + ", found " + str(count _nearFish))};
+            if (count _nearOil < _oilCost) then {_missingResources pushBack ("Oil: need " + str(_oilCost) + ", found " + str(count _nearOil))};
+            if (count _nearGold < _goldCost) then {_missingResources pushBack ("Gold: need " + str(_goldCost) + ", found " + str(count _nearGold))};
+            if (count _nearElectronics < _electronicsCost) then {_missingResources pushBack ("Electronics: need " + str(_electronicsCost) + ", found " + str(count _nearElectronics))};
 
             if (count _missingResources > 0) exitWith {
                 systemChat ("Missing resources: " + (_missingResources joinString " | "));
@@ -380,7 +398,13 @@ player addAction ["Open Crate Spawner", {
             for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)};
             for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoal select _i)};
             for "_i" from 0 to (_energyCost - 1) do {deleteVehicle (_nearEnergy select _i)};
-            _costMessage = "Cost: 12 Food + 12 Water + 20 Wood + 30 Metal + 15 Coal + 25 Energy";
+            for "_i" from 0 to (_ironCost - 1) do {deleteVehicle (_nearIron select _i)};
+            for "_i" from 0 to (_diamondCost - 1) do {deleteVehicle (_nearDiamond select _i)};
+            for "_i" from 0 to (_fishCost - 1) do {deleteVehicle (_nearFish select _i)};
+            for "_i" from 0 to (_oilCost - 1) do {deleteVehicle (_nearOil select _i)};
+            for "_i" from 0 to (_goldCost - 1) do {deleteVehicle (_nearGold select _i)};
+            for "_i" from 0 to (_electronicsCost - 1) do {deleteVehicle (_nearElectronics select _i)};
+            _costMessage = "Cost: 12F 12W 20Wood 30Metal 15Coal 25Energy 10Iron 5Diamonds 8Fish 8Oil 5Gold 10Electronics";
             _canSpawn = true;
         };
 
@@ -481,40 +505,42 @@ player addAction ["Open Crate Spawner", {
 
         _nextLevel = _currentLevel + 1;
         _foodCost = 0; _waterCost = 0; _woodCost = 0; _metalCost = 0; _coalCost = 0; _energyCost = 0;
+        _ironCost = 0; _diamondCost = 0; _fishCost = 0; _oilCost = 0; _goldCost = 0; _electronicsCost = 0;
+        _fuelTankCost = 0; _wheelCost = 0; _enginePartCost = 0;
 
         if (_factoryType == "Town") then {
             if (_nextLevel == 2) then {_foodCost = 2; _waterCost = 2; _woodCost = 3; _metalCost = 1};
-            if (_nextLevel == 3) then {_foodCost = 5; _waterCost = 5; _woodCost = 8; _metalCost = 3; _coalCost = 2};
-            if (_nextLevel == 4) then {_foodCost = 10; _waterCost = 10; _woodCost = 12; _metalCost = 8; _coalCost = 5; _energyCost = 3};
-            if (_nextLevel == 5) then {_foodCost = 15; _waterCost = 15; _woodCost = 18; _metalCost = 12; _coalCost = 8; _energyCost = 8};
+            if (_nextLevel == 3) then {_foodCost = 5; _waterCost = 5; _woodCost = 8; _metalCost = 3; _coalCost = 2; _ironCost = 2; _fishCost = 3};
+            if (_nextLevel == 4) then {_foodCost = 10; _waterCost = 10; _woodCost = 12; _metalCost = 8; _coalCost = 5; _energyCost = 3; _ironCost = 5; _fishCost = 5; _electronicsCost = 3; _diamondCost = 2; _oilCost = 3};
+            if (_nextLevel == 5) then {_foodCost = 15; _waterCost = 15; _woodCost = 18; _metalCost = 12; _coalCost = 8; _energyCost = 8; _ironCost = 8; _diamondCost = 5; _goldCost = 5; _electronicsCost = 6; _fuelTankCost = 3; _wheelCost = 3};
         };
 
         if (_factoryType == "Mineral") then {
             if (_nextLevel == 2) then {_foodCost = 3; _waterCost = 4; _woodCost = 5; _metalCost = 2; _coalCost = 1};
-            if (_nextLevel == 3) then {_foodCost = 8; _waterCost = 10; _woodCost = 12; _metalCost = 5; _coalCost = 4; _energyCost = 2};
-            if (_nextLevel == 4) then {_foodCost = 15; _waterCost = 18; _woodCost = 20; _metalCost = 12; _coalCost = 10; _energyCost = 5};
-            if (_nextLevel == 5) then {_foodCost = 25; _waterCost = 25; _woodCost = 30; _metalCost = 20; _coalCost = 15; _energyCost = 12};
+            if (_nextLevel == 3) then {_foodCost = 8; _waterCost = 10; _woodCost = 12; _metalCost = 5; _coalCost = 4; _energyCost = 2; _fishCost = 4; _electronicsCost = 2};
+            if (_nextLevel == 4) then {_foodCost = 15; _waterCost = 18; _woodCost = 20; _metalCost = 12; _coalCost = 10; _energyCost = 5; _ironCost = 8; _fishCost = 8; _electronicsCost = 5; _oilCost = 5; _goldCost = 3};
+            if (_nextLevel == 5) then {_foodCost = 25; _waterCost = 25; _woodCost = 30; _metalCost = 20; _coalCost = 15; _energyCost = 12; _ironCost = 12; _diamondCost = 8; _goldCost = 8; _electronicsCost = 10; _oilCost = 8; _fuelTankCost = 5; _wheelCost = 4; _enginePartCost = 4};
         };
 
         if (_factoryType == "Pier") then {
             if (_nextLevel == 2) then {_foodCost = 4; _waterCost = 5; _woodCost = 6; _metalCost = 2; _coalCost = 1; _energyCost = 1};
-            if (_nextLevel == 3) then {_foodCost = 10; _waterCost = 12; _woodCost = 15; _metalCost = 6; _coalCost = 5; _energyCost = 3};
-            if (_nextLevel == 4) then {_foodCost = 18; _waterCost = 20; _woodCost = 25; _metalCost = 15; _coalCost = 12; _energyCost = 8};
-            if (_nextLevel == 5) then {_foodCost = 30; _waterCost = 30; _woodCost = 35; _metalCost = 25; _coalCost = 18; _energyCost = 15};
+            if (_nextLevel == 3) then {_foodCost = 10; _waterCost = 12; _woodCost = 15; _metalCost = 6; _coalCost = 5; _energyCost = 3; _ironCost = 4; _electronicsCost = 3};
+            if (_nextLevel == 4) then {_foodCost = 18; _waterCost = 20; _woodCost = 25; _metalCost = 15; _coalCost = 12; _energyCost = 8; _ironCost = 10; _diamondCost = 4; _electronicsCost = 6; _goldCost = 5};
+            if (_nextLevel == 5) then {_foodCost = 30; _waterCost = 30; _woodCost = 35; _metalCost = 25; _coalCost = 18; _energyCost = 15; _ironCost = 15; _diamondCost = 10; _goldCost = 12; _electronicsCost = 12; _oilCost = 10; _fuelTankCost = 6; _wheelCost = 5; _enginePartCost = 5};
         };
 
         if (_factoryType == "Powerplant") then {
             if (_nextLevel == 2) then {_foodCost = 5; _waterCost = 5; _woodCost = 8; _metalCost = 5; _coalCost = 8; _energyCost = 3};
-            if (_nextLevel == 3) then {_foodCost = 12; _waterCost = 15; _woodCost = 18; _metalCost = 12; _coalCost = 15; _energyCost = 8};
-            if (_nextLevel == 4) then {_foodCost = 22; _waterCost = 25; _woodCost = 30; _metalCost = 20; _coalCost = 25; _energyCost = 15};
-            if (_nextLevel == 5) then {_foodCost = 35; _waterCost = 35; _woodCost = 40; _metalCost = 35; _coalCost = 35; _energyCost = 25};
+            if (_nextLevel == 3) then {_foodCost = 12; _waterCost = 15; _woodCost = 18; _metalCost = 12; _coalCost = 15; _energyCost = 8; _ironCost = 6; _fishCost = 6};
+            if (_nextLevel == 4) then {_foodCost = 22; _waterCost = 25; _woodCost = 30; _metalCost = 20; _coalCost = 25; _energyCost = 15; _ironCost = 12; _diamondCost = 6; _fishCost = 12; _oilCost = 8; _goldCost = 6};
+            if (_nextLevel == 5) then {_foodCost = 35; _waterCost = 35; _woodCost = 40; _metalCost = 35; _coalCost = 35; _energyCost = 25; _ironCost = 18; _diamondCost = 12; _goldCost = 15; _oilCost = 15; _fuelTankCost = 8; _wheelCost = 8; _enginePartCost = 8};
         };
 
         if (_factoryType == "Vehicle") then {
             if (_nextLevel == 2) then {_foodCost = 6; _waterCost = 6; _woodCost = 10; _metalCost = 8; _coalCost = 5; _energyCost = 5};
-            if (_nextLevel == 3) then {_foodCost = 15; _waterCost = 18; _woodCost = 25; _metalCost = 18; _coalCost = 12; _energyCost = 15};
-            if (_nextLevel == 4) then {_foodCost = 28; _waterCost = 30; _woodCost = 40; _metalCost = 30; _coalCost = 20; _energyCost = 25};
-            if (_nextLevel == 5) then {_foodCost = 45; _waterCost = 45; _woodCost = 50; _metalCost = 50; _coalCost = 30; _energyCost = 40};
+            if (_nextLevel == 3) then {_foodCost = 15; _waterCost = 18; _woodCost = 25; _metalCost = 18; _coalCost = 12; _energyCost = 15; _ironCost = 8; _fishCost = 8; _electronicsCost = 8};
+            if (_nextLevel == 4) then {_foodCost = 28; _waterCost = 30; _woodCost = 40; _metalCost = 30; _coalCost = 20; _energyCost = 25; _ironCost = 15; _diamondCost = 8; _fishCost = 15; _electronicsCost = 15; _oilCost = 12; _goldCost = 10};
+            if (_nextLevel == 5) then {_foodCost = 45; _waterCost = 45; _woodCost = 50; _metalCost = 50; _coalCost = 30; _energyCost = 40; _ironCost = 25; _diamondCost = 15; _goldCost = 20; _oilCost = 20; _electronicsCost = 25; _fuelTankCost = 12; _wheelCost = 12; _enginePartCost = 12};
         };
 
         _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
@@ -523,6 +549,15 @@ player addAction ["Open Crate Spawner", {
         _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
         _nearCoal = nearestObjects [_factoryPos, ["Land_PaperBox_closed_F"], 50];
         _nearEnergy = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 50];
+        _nearIron = nearestObjects [_factoryPos, ["Land_PaperBox_open_full_F"], 50];
+        _nearDiamond = nearestObjects [_factoryPos, ["Land_Boxloader_Fort_iso_Brown"], 50];
+        _nearFish = nearestObjects [_factoryPos, ["Land_WoodenBox_02_F"], 50];
+        _nearOil = nearestObjects [_factoryPos, ["CargoNet_01_barrels_F"], 50];
+        _nearGold = nearestObjects [_factoryPos, ["Land_CratesWooden_F"], 50];
+        _nearElectronics = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_boxes_F"], 50];
+        _nearFuelTank = nearestObjects [_factoryPos, ["Land_CanisterFuel_F"], 50];
+        _nearWheel = nearestObjects [_factoryPos, ["Land_Wheel_01_F"], 50];
+        _nearEnginePart = nearestObjects [_factoryPos, ["Land_MetalBarrel_F"], 50];
 
         _missingResources = [];
         if (_foodCost > 0 && count _nearFood < _foodCost) then {_missingResources pushBack ("Food: need " + str(_foodCost) + ", found " + str(count _nearFood))};
@@ -531,6 +566,15 @@ player addAction ["Open Crate Spawner", {
         if (_metalCost > 0 && count _nearMetal < _metalCost) then {_missingResources pushBack ("Metal: need " + str(_metalCost) + ", found " + str(count _nearMetal))};
         if (_coalCost > 0 && count _nearCoal < _coalCost) then {_missingResources pushBack ("Coal: need " + str(_coalCost) + ", found " + str(count _nearCoal))};
         if (_energyCost > 0 && count _nearEnergy < _energyCost) then {_missingResources pushBack ("Energy: need " + str(_energyCost) + ", found " + str(count _nearEnergy))};
+        if (_ironCost > 0 && count _nearIron < _ironCost) then {_missingResources pushBack ("Iron: need " + str(_ironCost) + ", found " + str(count _nearIron))};
+        if (_diamondCost > 0 && count _nearDiamond < _diamondCost) then {_missingResources pushBack ("Diamonds: need " + str(_diamondCost) + ", found " + str(count _nearDiamond))};
+        if (_fishCost > 0 && count _nearFish < _fishCost) then {_missingResources pushBack ("Fish: need " + str(_fishCost) + ", found " + str(count _nearFish))};
+        if (_oilCost > 0 && count _nearOil < _oilCost) then {_missingResources pushBack ("Oil: need " + str(_oilCost) + ", found " + str(count _nearOil))};
+        if (_goldCost > 0 && count _nearGold < _goldCost) then {_missingResources pushBack ("Gold: need " + str(_goldCost) + ", found " + str(count _nearGold))};
+        if (_electronicsCost > 0 && count _nearElectronics < _electronicsCost) then {_missingResources pushBack ("Electronics: need " + str(_electronicsCost) + ", found " + str(count _nearElectronics))};
+        if (_fuelTankCost > 0 && count _nearFuelTank < _fuelTankCost) then {_missingResources pushBack ("Fuel Tanks: need " + str(_fuelTankCost) + ", found " + str(count _nearFuelTank))};
+        if (_wheelCost > 0 && count _nearWheel < _wheelCost) then {_missingResources pushBack ("Wheels: need " + str(_wheelCost) + ", found " + str(count _nearWheel))};
+        if (_enginePartCost > 0 && count _nearEnginePart < _enginePartCost) then {_missingResources pushBack ("Engine Parts: need " + str(_enginePartCost) + ", found " + str(count _nearEnginePart))};
 
         if (count _missingResources > 0) exitWith {
             systemChat ("Missing resources for Level " + str(_nextLevel) + ": " + (_missingResources joinString " | "));
@@ -542,6 +586,15 @@ player addAction ["Open Crate Spawner", {
         if (_metalCost > 0) then {for "_i" from 0 to (_metalCost - 1) do {deleteVehicle (_nearMetal select _i)}};
         if (_coalCost > 0) then {for "_i" from 0 to (_coalCost - 1) do {deleteVehicle (_nearCoal select _i)}};
         if (_energyCost > 0) then {for "_i" from 0 to (_energyCost - 1) do {deleteVehicle (_nearEnergy select _i)}};
+        if (_ironCost > 0) then {for "_i" from 0 to (_ironCost - 1) do {deleteVehicle (_nearIron select _i)}};
+        if (_diamondCost > 0) then {for "_i" from 0 to (_diamondCost - 1) do {deleteVehicle (_nearDiamond select _i)}};
+        if (_fishCost > 0) then {for "_i" from 0 to (_fishCost - 1) do {deleteVehicle (_nearFish select _i)}};
+        if (_oilCost > 0) then {for "_i" from 0 to (_oilCost - 1) do {deleteVehicle (_nearOil select _i)}};
+        if (_goldCost > 0) then {for "_i" from 0 to (_goldCost - 1) do {deleteVehicle (_nearGold select _i)}};
+        if (_electronicsCost > 0) then {for "_i" from 0 to (_electronicsCost - 1) do {deleteVehicle (_nearElectronics select _i)}};
+        if (_fuelTankCost > 0) then {for "_i" from 0 to (_fuelTankCost - 1) do {deleteVehicle (_nearFuelTank select _i)}};
+        if (_wheelCost > 0) then {for "_i" from 0 to (_wheelCost - 1) do {deleteVehicle (_nearWheel select _i)}};
+        if (_enginePartCost > 0) then {for "_i" from 0 to (_enginePartCost - 1) do {deleteVehicle (_nearEnginePart select _i)}};
 
         CRATE_FACTORY_LEVEL set [_selectedIndex, _nextLevel];
         _newMaxCrates = 10 + (_nextLevel * 2);
@@ -1320,11 +1373,11 @@ player addAction ["Open Crate Spawner", {
                     };
 
                     if (_factoryType == "Powerplant") then {
-                        _costText = "<t size='0.8'>Cost:<br/>10 Food | 10 Water | 15 Wood<br/>15 Metal | 20 Coal | 8 Energy</t>";
+                        _costText = "<t size='0.7'>Cost:<br/>10F 10W 15Wood 15Metal 20Coal 8Energy<br/>5 Iron | 5 Fish</t>";
                     };
 
                     if (_factoryType == "Vehicle") then {
-                        _costText = "<t size='0.8'>Cost:<br/>12 Food | 12 Water | 20 Wood<br/>30 Metal | 15 Coal | 25 Energy</t>";
+                        _costText = "<t size='0.65'>Cost:<br/>12F 12W 20Wood 30Metal 15Coal 25Energy<br/>10Iron 5Diamonds 8Fish 8Oil 5Gold 10Electronics</t>";
                     };
 
                     _labelCost ctrlSetStructuredText parseText _costText;
