@@ -916,7 +916,10 @@ player addAction ["Open Crate Spawner", {
                                 _inventoryBox = "Box_IND_AmmoVeh_F" createVehicle _spawnPos;
                                 _inventoryBox attachTo [_crate, [0, 0, 0]];
                                 hideObjectGlobal _inventoryBox;
-                                clearItemCargoGlobal _inventoryBox;
+                                clearWeaponCargoGlobal _inventoryBox;
+                                clearMagazineCargoGlobal _inventoryBox;
+                                clearWeaponCargoGlobal _inventoryBox; clearMagazineCargoGlobal _inventoryBox; clearItemCargoGlobal _inventoryBox; clearBackpackCargoGlobal _inventoryBox;
+                                clearBackpackCargoGlobal _inventoryBox;
                                 _inventoryBox addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", 250];
                                 _crate setVariable ["inventoryBox", _inventoryBox, true];
                                 _crate setVariable ["crateItemCount", 250, true];
@@ -934,7 +937,10 @@ player addAction ["Open Crate Spawner", {
                                 _inventoryBox = "Box_IND_Wps_F" createVehicle _spawnPos;
                                 _inventoryBox attachTo [_crate, [0, 0, 0]];
                                 hideObjectGlobal _inventoryBox;
-                                clearItemCargoGlobal _inventoryBox;
+                                clearWeaponCargoGlobal _inventoryBox;
+                                clearMagazineCargoGlobal _inventoryBox;
+                                clearWeaponCargoGlobal _inventoryBox; clearMagazineCargoGlobal _inventoryBox; clearItemCargoGlobal _inventoryBox; clearBackpackCargoGlobal _inventoryBox;
+                                clearBackpackCargoGlobal _inventoryBox;
                                 _inventoryBox addItemCargoGlobal ["ACE_WaterBottle", 250];
                                 _crate setVariable ["inventoryBox", _inventoryBox, true];
                                 _crate setVariable ["crateItemCount", 250, true];
@@ -1475,12 +1481,12 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                 _newCount = (_itemCount - _damageAmount) max 0;
                 _crate setVariable ["crateItemCount", _newCount, true];
                 if (_itemType == "food") then {
-                    clearItemCargoGlobal _inventoryBox;
+                    clearWeaponCargoGlobal _inventoryBox; clearMagazineCargoGlobal _inventoryBox; clearItemCargoGlobal _inventoryBox; clearBackpackCargoGlobal _inventoryBox;
                     if (_newCount > 0) then {
                         _inventoryBox addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", _newCount];
                     };
                 } else {
-                    clearItemCargoGlobal _inventoryBox;
+                    clearWeaponCargoGlobal _inventoryBox; clearMagazineCargoGlobal _inventoryBox; clearItemCargoGlobal _inventoryBox; clearBackpackCargoGlobal _inventoryBox;
                     if (_newCount > 0) then {
                         _inventoryBox addItemCargoGlobal ["ACE_WaterBottle", _newCount];
                     };
@@ -1513,12 +1519,12 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                 _crate setVariable ["crateItemCount", _newCount, true];
                 if (!isNull _inventoryBox) then {
                     if (_itemType == "food") then {
-                        clearItemCargoGlobal _inventoryBox;
+                        clearWeaponCargoGlobal _inventoryBox; clearMagazineCargoGlobal _inventoryBox; clearItemCargoGlobal _inventoryBox; clearBackpackCargoGlobal _inventoryBox;
                         if (_newCount > 0) then {
                             _inventoryBox addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", _newCount];
                         };
                     } else {
-                        clearItemCargoGlobal _inventoryBox;
+                        clearWeaponCargoGlobal _inventoryBox; clearMagazineCargoGlobal _inventoryBox; clearItemCargoGlobal _inventoryBox; clearBackpackCargoGlobal _inventoryBox;
                         if (_newCount > 0) then {
                             _inventoryBox addItemCargoGlobal ["ACE_WaterBottle", _newCount];
                         };
@@ -1602,10 +1608,10 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                                 _crate setVariable ["crateItemCount", _newCount, true];
                                 if (!isNull _inventoryBox) then {
                                     if (_itemType == "food") then {
-                                        clearItemCargoGlobal _inventoryBox;
+                                        clearWeaponCargoGlobal _inventoryBox; clearMagazineCargoGlobal _inventoryBox; clearItemCargoGlobal _inventoryBox; clearBackpackCargoGlobal _inventoryBox;
                                         _inventoryBox addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", _newCount];
                                     } else {
-                                        clearItemCargoGlobal _inventoryBox;
+                                        clearWeaponCargoGlobal _inventoryBox; clearMagazineCargoGlobal _inventoryBox; clearItemCargoGlobal _inventoryBox; clearBackpackCargoGlobal _inventoryBox;
                                         _inventoryBox addItemCargoGlobal ["ACE_WaterBottle", _newCount];
                                     };
                                 };
