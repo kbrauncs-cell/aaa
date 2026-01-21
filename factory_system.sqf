@@ -1499,7 +1499,7 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
             _droppedItems = _droppedItems select {!isNull _x};
             _crate setVariable ["droppedItems", _droppedItems, true];
 
-            if (time >= _nextDropTime && count _droppedItems < 15 && _itemCount > 0) then {
+            if (time >= _nextDropTime && count _droppedItems < 10 && _itemCount > 0) then {
                 _dropClass = if (_itemType == "food") then {"Land_FoodSack_01_full_brown_idap_F"} else {"Land_WaterBottle_01_pack_F"};
                 _randomDist = 3 + random 8;
                 _randomAngle = random 360;
@@ -1513,8 +1513,8 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                 _crate setVariable ["nextDropTime", time + (180 + random 420), true];
                 DROPPED_ITEMS_GLOBAL pushBackUnique _droppedItem;
 
-                // Remove items from crate when dropping
-                _removeAmount = 1 + floor(random 3);
+                // Remove 25 items from crate when dropping (250/10 = 25)
+                _removeAmount = 25;
                 _newCount = (_itemCount - _removeAmount) max 0;
                 _crate setVariable ["crateItemCount", _newCount, true];
                 if (!isNull _inventoryBox) then {
@@ -1529,6 +1529,28 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                             _inventoryBox addItemCargoGlobal ["ACE_WaterBottle", _newCount];
                         };
                     };
+                };
+
+                // Start countdown when all items dropped
+                if (_newCount <= 0 && !(_crate getVariable ["countdownStarted", false])) then {
+                    _crate setVariable ["countdownStarted", true, true];
+                    _crate setVariable ["countdownTime", 60, true];
+                };
+            };
+
+            // Countdown and deletion system
+            _countdownStarted = _crate getVariable ["countdownStarted", false];
+            if (_countdownStarted) then {
+                _countdownTime = _crate getVariable ["countdownTime", 60];
+                _countdownTime = _countdownTime - 5;
+                _crate setVariable ["countdownTime", _countdownTime, true];
+
+                if (_countdownTime <= 0) then {
+                    {deleteVehicle _x} forEach _droppedItems;
+                    DROPPED_ITEMS_GLOBAL = DROPPED_ITEMS_GLOBAL - _droppedItems;
+                    if (!isNull _inventoryBox) then {deleteVehicle _inventoryBox};
+                    deleteVehicle _crate;
+                    FOOD_WATER_CRATES = FOOD_WATER_CRATES - [_crate];
                 };
             };
         } forEach FOOD_WATER_CRATES;
@@ -1582,7 +1604,8 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
             };
             
             if (!isNull PLAYER_CARRYING_ITEM && PLAYER_CARRYING_ITEM == _item && !isNull _parentCrate) then {
-                
+                _cratePos = getPosATL _parentCrate;
+
                 if (_playerPos distance2D _cratePos < 2) then {
                     if (!(_item getVariable ["hasReturnAction", false])) then {
                         _returnAction = player addAction [
@@ -1603,9 +1626,16 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                                 _itemCount = _crate getVariable ["crateItemCount", 0];
                                 _itemType = _crate getVariable ["crateItemType", "food"];
                                 _inventoryBox = _crate getVariable ["inventoryBox", objNull];
-                                _returnAmount = 1 + floor(random 3);
+                                _returnAmount = 25;
                                 _newCount = (_itemCount + _returnAmount) min 250;
                                 _crate setVariable ["crateItemCount", _newCount, true];
+
+                                // Cancel countdown if items are returned
+                                if (_newCount > 0) then {
+                                    _crate setVariable ["countdownStarted", false, true];
+                                    _crate setVariable ["countdownTime", 60, true];
+                                };
+
                                 if (!isNull _inventoryBox) then {
                                     if (_itemType == "food") then {
                                         clearWeaponCargoGlobal _inventoryBox; clearMagazineCargoGlobal _inventoryBox; clearItemCargoGlobal _inventoryBox; clearBackpackCargoGlobal _inventoryBox;
@@ -1615,10 +1645,10 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                                         _inventoryBox addItemCargoGlobal ["ACE_WaterBottle", _newCount];
                                     };
                                 };
-                                
+
                                 player removeAction _actionId;
                                 _item setVariable ["hasReturnAction", false, true];
-                                systemChat "Item returned to crate!";
+                                systemChat "Item returned to crate! +25 items";
                             },
                             [_item, _parentCrate],
                             1.5,
