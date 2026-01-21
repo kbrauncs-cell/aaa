@@ -270,8 +270,8 @@ player addAction ["Open Crate Spawner", {
                 _costMessage = "Cost: FREE (First town factory)";
             } else {
                 _foodCost = 3; _waterCost = 3; _woodCost = 5;
-                _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
-                _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
+                _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_AmmoVeh_F"], 100];
+                _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_Wps_F"], 100];
                 _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
 
                 _missingResources = [];
@@ -293,8 +293,8 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Mineral") then {
             _foodCost = 8; _waterCost = 10; _woodCost = 15;
-            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
-            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
+            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_AmmoVeh_F"], 100];
+            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_Wps_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
 
             _missingResources = [];
@@ -315,8 +315,8 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Powerplant") then {
             _foodCost = 10; _waterCost = 10; _woodCost = 15; _metalCost = 15; _coalCost = 20; _ironCost = 5; _fishCost = 5;
-            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
-            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
+            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_AmmoVeh_F"], 100];
+            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_Wps_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
             _nearMetal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
             _nearCoal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_closed_F"], 100];
@@ -349,8 +349,8 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Vehicle") then {
             _foodCost = 12; _waterCost = 12; _woodCost = 20; _metalCost = 30; _coalCost = 15; _energyCost = 25; _ironCost = 10; _diamondCost = 5; _fishCost = 8; _oilCost = 8; _goldCost = 5; _electronicsCost = 10;
-            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
-            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
+            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_AmmoVeh_F"], 100];
+            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_Wps_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
             _nearMetal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
             _nearCoal = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_closed_F"], 100];
@@ -398,8 +398,8 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Pier") then {
             _foodCost = 10; _waterCost = 12; _woodCost = 18;
-            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
-            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
+            _nearFood = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_AmmoVeh_F"], 100];
+            _nearWater = nearestObjects [CRATE_PENDING_LOCATION, ["Box_IND_Wps_F"], 100];
             _nearWood = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
 
             _missingResources = [];
@@ -522,8 +522,8 @@ player addAction ["Open Crate Spawner", {
             if (_nextLevel == 5) then {_foodCost = 45; _waterCost = 45; _woodCost = 50; _metalCost = 50; _coalCost = 30; _energyCost = 40; _ironCost = 25; _diamondCost = 15; _goldCost = 20; _oilCost = 20; _electronicsCost = 25; _fuelTankCost = 12; _wheelCost = 12; _enginePartCost = 12};
         };
 
-        _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
-        _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
+        _nearFood = nearestObjects [_factoryPos, ["Box_IND_AmmoVeh_F"], 50];
+        _nearWater = nearestObjects [_factoryPos, ["Box_IND_Wps_F"], 50];
         _nearWood = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 50];
         _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
         _nearCoal = nearestObjects [_factoryPos, ["Land_PaperBox_closed_F"], 50];
@@ -614,8 +614,8 @@ player addAction ["Open Crate Spawner", {
             _waterCost = _baseCost + floor(random 3);
             _woodCost = _baseCost + floor(random 3);
             _elecCost = _baseCost + floor(random 2);
-            _nearFood = nearestObjects [_factoryPos, ["Land_FoodSacks_01_large_white_idap_F"], 50];
-            _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
+            _nearFood = nearestObjects [_factoryPos, ["Box_IND_AmmoVeh_F"], 50];
+            _nearWater = nearestObjects [_factoryPos, ["Box_IND_Wps_F"], 50];
             _nearWood = nearestObjects [_factoryPos, ["Land_WoodPile_03_F"], 50];
             _nearElec = nearestObjects [_factoryPos, ["Land_PortableServer_01_sand_F"], 50];
             _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
@@ -662,7 +662,7 @@ player addAction ["Open Crate Spawner", {
             _coalCost = _baseCost + 2 + floor(random 3);
             _waterCost = _baseCost + floor(random 3);
             _nearCoal = nearestObjects [_factoryPos, ["Land_PaperBox_closed_F"], 50];
-            _nearWater = nearestObjects [_factoryPos, ["Land_PaperBox_01_open_water_F"], 50];
+            _nearWater = nearestObjects [_factoryPos, ["Box_IND_Wps_F"], 50];
             _nearMetal = nearestObjects [_factoryPos, ["Land_CargoBox_V1_F"], 50];
 
             _waterValue = 0;
@@ -897,7 +897,7 @@ player addAction ["Open Crate Spawner", {
                             _crate = _crateType createVehicle _spawnPos;
                             _crate setPos _spawnPos;
 
-                            if (_crateType == "Land_FoodSacks_01_large_white_idap_F") then {
+                            if (_crateType == "Box_IND_AmmoVeh_F") then {
                                 clearItemCargoGlobal _crate;
                                 _crate addItemCargoGlobal ["ACE_MRE_ChickenTikkaMasala", 250];
                                 _crate setVariable ["crateItemCount", 250, true];
@@ -906,7 +906,7 @@ player addAction ["Open Crate Spawner", {
                                 _crate setVariable ["nextDropTime", time + (300 + random 600), true];
                                 FOOD_WATER_CRATES pushBack _crate;
                             };
-                            if (_crateType == "Land_PaperBox_01_open_water_F") then {
+                            if (_crateType == "Box_IND_Wps_F") then {
                                 clearItemCargoGlobal _crate;
                                 _crate addItemCargoGlobal ["ACE_WaterBottle", 250];
                                 _crate setVariable ["crateItemCount", 250, true];
@@ -1319,9 +1319,9 @@ player addAction ["Open Crate Spawner", {
                     lbClear _comboType;
                     if (_factoryType == "Town") then {
                         _comboType lbAdd "Food";
-                        _comboType lbSetData [0, "Land_FoodSacks_01_large_white_idap_F"];
+                        _comboType lbSetData [0, "Box_IND_AmmoVeh_F"];
                         _comboType lbAdd "Water";
-                        _comboType lbSetData [1, "Land_PaperBox_01_open_water_F"];
+                        _comboType lbSetData [1, "Box_IND_Wps_F"];
                         _comboType lbAdd "Wood";
                         _comboType lbSetData [2, "Land_WoodPile_03_F"];
                     };
