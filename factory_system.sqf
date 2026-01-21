@@ -925,7 +925,7 @@ player addAction ["Open Crate Spawner", {
                                 _crate setVariable ["crateItemCount", 250, true];
                                 _crate setVariable ["crateItemType", "food", true];
                                 _crate setVariable ["droppedItems", [], true];
-                                _crate setVariable ["nextDropTime", time + (480 + random 1020), true];
+                                _crate setVariable ["nextDropTime", time + (300 + random 600), true];
                                 [_crate, 0, ["ACE_MainActions"],
                                     ["OpenInventory", "Open Food Storage", "",
                                     {params ["_target"]; _box = _target getVariable ["inventoryBox", objNull]; if (!isNull _box) then {player action ["Gear", _box]}},
@@ -946,7 +946,7 @@ player addAction ["Open Crate Spawner", {
                                 _crate setVariable ["crateItemCount", 250, true];
                                 _crate setVariable ["crateItemType", "water", true];
                                 _crate setVariable ["droppedItems", [], true];
-                                _crate setVariable ["nextDropTime", time + (480 + random 1020), true];
+                                _crate setVariable ["nextDropTime", time + (300 + random 600), true];
                                 [_crate, 0, ["ACE_MainActions"],
                                     ["OpenInventory", "Open Water Storage", "",
                                     {params ["_target"]; _box = _target getVariable ["inventoryBox", objNull]; if (!isNull _box) then {player action ["Gear", _box]}},
@@ -1510,7 +1510,7 @@ systemChat "Factory Manager loaded! Hover over factories for info.";
                 _droppedItem setVariable ["itemType", _itemType, true];
                 _droppedItems pushBack _droppedItem;
                 _crate setVariable ["droppedItems", _droppedItems, true];
-                _crate setVariable ["nextDropTime", time + (480 + random 1020), true];
+                _crate setVariable ["nextDropTime", time + (300 + random 600), true];
                 DROPPED_ITEMS_GLOBAL pushBackUnique _droppedItem;
 
                 // Remove 25 items from crate when dropping (250/10 = 25)
