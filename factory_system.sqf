@@ -111,7 +111,9 @@ player addAction ["Open Crate Spawner", {
                 _timeLeft = CRATE_FACTORY_TIMERS select _hoveredFactory;
                 _minutes = floor(_timeLeft / 60);
                 _seconds = floor(_timeLeft mod 60);
-                _timerInfo = format ["\nNext: %1:%2", _minutes, if (_seconds < 10) then {"0" + str _seconds} else {str _seconds}];
+                _secondsStr = str _seconds;
+                if (_seconds < 10) then {_secondsStr = "0" + str _seconds};
+                _timerInfo = "\nNext: " + str(_minutes) + ":" + _secondsStr;
             } else {
                 _timerInfo = "\nStatus: OFF";
             };
