@@ -93,16 +93,16 @@ player addAction ["Open Crate Spawner", {
 
             _resourceInfo = "";
             if (_factoryType == "Town") then {
-                _resourceInfo = format ["\nMetal: %1%%", round _metal];
+                _resourceInfo = format ["\nMetal: %1%% (Boost)", round _metal];
             };
             if (_factoryType == "Powerplant") then {
-                _resourceInfo = format ["\nCoal: %1%% | Water: %2%% | Metal: %3%%", round _coal, round _water, round _metal];
+                _resourceInfo = format ["\nCoal: %1%% | Water: %2%% | Metal: %3%% (Boost)", round _coal, round _water, round _metal];
             };
             if (_factoryType == "Vehicle") then {
                 _resourceInfo = format ["\nElec: %1%% | Metal: %2%%", round _elec, round _metal];
             };
             if (_factoryType == "Mineral" || _factoryType == "Pier") then {
-                _resourceInfo = format ["\nFood: %1%% | Water: %2%% | Wood: %3%%", round _food, round _water, round _wood];
+                _resourceInfo = format ["\nFood: %1%% | Water: %2%% | Wood: %3%%\nElec: %4%% + Metal: %5%% (Boost)", round _food, round _water, round _wood, round _elec, round _metal];
             };
 
             _timerInfo = "";
@@ -217,9 +217,9 @@ player addAction ["Open Crate Spawner", {
             if (_townCount == 0) then {
                 _costText = "<t size='1.0' color='#0f0'>FREE!</t>";
             } else {
-                _woodCost = 2 + (2 * _townCount);
+                _woodCost = 5 + (8 * _townCount);
                 _metalCost = 0;
-                if (_townCount >= 2) then {_metalCost = 1 + floor(_townCount / 2)};
+                if (_townCount >= 1) then {_metalCost = 3 + (5 * _townCount)};
                 if (_metalCost > 0) then {
                     _costText = format ["<t size='0.9'>Cost:<br/>%1x Wood<br/>%2x Metal</t>", _woodCost, _metalCost];
                 } else {
@@ -232,33 +232,33 @@ player addAction ["Open Crate Spawner", {
             _mineralCount = {_x == "Mineral"} count CRATE_FACTORY_TYPES;
             _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
             _pierMultiplier = 1 + (_pierCount * 0.5);
-            _foodCost = ceil((3 + (3 * _mineralCount)) * _pierMultiplier);
-            _waterCost = ceil((4 + (4 * _mineralCount)) * _pierMultiplier);
-            _woodCost = ceil((5 + (5 * _mineralCount)) * _pierMultiplier);
+            _foodCost = ceil((10 + (10 * _mineralCount)) * _pierMultiplier);
+            _waterCost = ceil((15 + (15 * _mineralCount)) * _pierMultiplier);
+            _woodCost = ceil((20 + (20 * _mineralCount)) * _pierMultiplier);
             _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Wood</t>", _foodCost, _waterCost, _woodCost];
         };
 
         if (_factoryType == "Pier") then {
             _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
-            _foodCost = 5 + (5 * _pierCount);
-            _waterCost = 6 + (6 * _pierCount);
-            _woodCost = 8 + (8 * _pierCount);
+            _foodCost = 15 + (15 * _pierCount);
+            _waterCost = 20 + (20 * _pierCount);
+            _woodCost = 25 + (25 * _pierCount);
             _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Wood</t>", _foodCost, _waterCost, _woodCost];
         };
 
         if (_factoryType == "Powerplant") then {
             _powerCount = {_x == "Powerplant"} count CRATE_FACTORY_TYPES;
-            _coalCost = 6 + (6 * _powerCount);
-            _metalCost = 5 + (5 * _powerCount);
-            _woodCost = 4 + (4 * _powerCount);
+            _coalCost = 20 + (20 * _powerCount);
+            _metalCost = 25 + (25 * _powerCount);
+            _woodCost = 15 + (15 * _powerCount);
             _costText = format ["<t size='0.9'>Cost:<br/>%1x Coal<br/>%2x Metal<br/>%3x Wood</t>", _coalCost, _metalCost, _woodCost];
         };
 
         if (_factoryType == "Vehicle") then {
             _vehicleCount = {_x == "Vehicle"} count CRATE_FACTORY_TYPES;
-            _energyCost = 8 + (8 * _vehicleCount);
-            _metalCost = 10 + (10 * _vehicleCount);
-            _woodCost = 6 + (6 * _vehicleCount);
+            _energyCost = 30 + (30 * _vehicleCount);
+            _metalCost = 40 + (40 * _vehicleCount);
+            _woodCost = 20 + (20 * _vehicleCount);
             _costText = format ["<t size='0.9'>Cost:<br/>%1x Energy<br/>%2x Metal<br/>%3x Wood</t>", _energyCost, _metalCost, _woodCost];
         };
 
@@ -290,9 +290,9 @@ player addAction ["Open Crate Spawner", {
                 _canSpawn = true;
                 _costMessage = "Cost: FREE (First town factory)";
             } else {
-                _woodCost = 2 + (2 * _townCount);
+                _woodCost = 5 + (8 * _townCount);
                 _metalCost = 0;
-                if (_townCount >= 2) then {_metalCost = 1 + floor(_townCount / 2)};
+                if (_townCount >= 1) then {_metalCost = 3 + (5 * _townCount)};
                 _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
                 _nearMetalCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
 
@@ -319,9 +319,9 @@ player addAction ["Open Crate Spawner", {
             _mineralCount = {_x == "Mineral"} count CRATE_FACTORY_TYPES;
             _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
             _pierMultiplier = 1 + (_pierCount * 0.5);
-            _foodCost = ceil((3 + (3 * _mineralCount)) * _pierMultiplier);
-            _waterCost = ceil((4 + (4 * _mineralCount)) * _pierMultiplier);
-            _woodCost = ceil((5 + (5 * _mineralCount)) * _pierMultiplier);
+            _foodCost = ceil((10 + (10 * _mineralCount)) * _pierMultiplier);
+            _waterCost = ceil((15 + (15 * _mineralCount)) * _pierMultiplier);
+            _woodCost = ceil((20 + (20 * _mineralCount)) * _pierMultiplier);
             _nearFoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
             _nearWaterCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
@@ -344,9 +344,9 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Powerplant") then {
             _powerCount = {_x == "Powerplant"} count CRATE_FACTORY_TYPES;
-            _coalCost = 6 + (6 * _powerCount);
-            _metalCost = 5 + (5 * _powerCount);
-            _woodCost = 4 + (4 * _powerCount);
+            _coalCost = 20 + (20 * _powerCount);
+            _metalCost = 25 + (25 * _powerCount);
+            _woodCost = 15 + (15 * _powerCount);
             _nearCoalCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_closed_F"], 100];
             _nearMetalCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
             _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
@@ -369,9 +369,9 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Vehicle") then {
             _vehicleCount = {_x == "Vehicle"} count CRATE_FACTORY_TYPES;
-            _energyCost = 8 + (8 * _vehicleCount);
-            _metalCost = 10 + (10 * _vehicleCount);
-            _woodCost = 6 + (6 * _vehicleCount);
+            _energyCost = 30 + (30 * _vehicleCount);
+            _metalCost = 40 + (40 * _vehicleCount);
+            _woodCost = 20 + (20 * _vehicleCount);
             _nearEnergyCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PortableServer_01_sand_F"], 100];
             _nearMetalCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_CargoBox_V1_F"], 100];
             _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
@@ -394,9 +394,9 @@ player addAction ["Open Crate Spawner", {
 
         if (_factoryType == "Pier") then {
             _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
-            _foodCost = 5 + (5 * _pierCount);
-            _waterCost = 6 + (6 * _pierCount);
-            _woodCost = 8 + (8 * _pierCount);
+            _foodCost = 15 + (15 * _pierCount);
+            _waterCost = 20 + (20 * _pierCount);
+            _woodCost = 25 + (25 * _pierCount);
             _nearFoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_FoodSacks_01_large_white_idap_F"], 100];
             _nearWaterCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_PaperBox_01_open_water_F"], 100];
             _nearWoodCrates = nearestObjects [CRATE_PENDING_LOCATION, ["Land_WoodPile_03_F"], 100];
@@ -1212,9 +1212,9 @@ player addAction ["Open Crate Spawner", {
                         if (_townCount == 0) then {
                             _costText = "<t size='1.0' color='#0f0'>FREE!</t>";
                         } else {
-                            _woodCost = 2 + (2 * _townCount);
+                            _woodCost = 5 + (8 * _townCount);
                             _metalCost = 0;
-                            if (_townCount >= 2) then {_metalCost = 1 + floor(_townCount / 2)};
+                            if (_townCount >= 1) then {_metalCost = 3 + (5 * _townCount)};
                             if (_metalCost > 0) then {
                                 _costText = format ["<t size='0.9'>Cost:<br/>%1x Wood<br/>%2x Metal</t>", _woodCost, _metalCost];
                             } else {
@@ -1227,33 +1227,33 @@ player addAction ["Open Crate Spawner", {
                         _mineralCount = {_x == "Mineral"} count CRATE_FACTORY_TYPES;
                         _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
                         _pierMultiplier = 1 + (_pierCount * 0.5);
-                        _foodCost = ceil((3 + (3 * _mineralCount)) * _pierMultiplier);
-                        _waterCost = ceil((4 + (4 * _mineralCount)) * _pierMultiplier);
-                        _woodCost = ceil((5 + (5 * _mineralCount)) * _pierMultiplier);
+                        _foodCost = ceil((10 + (10 * _mineralCount)) * _pierMultiplier);
+                        _waterCost = ceil((15 + (15 * _mineralCount)) * _pierMultiplier);
+                        _woodCost = ceil((20 + (20 * _mineralCount)) * _pierMultiplier);
                         _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Wood</t>", _foodCost, _waterCost, _woodCost];
                     };
 
                     if (_factoryType == "Pier") then {
                         _pierCount = {_x == "Pier"} count CRATE_FACTORY_TYPES;
-                        _foodCost = 5 + (5 * _pierCount);
-                        _waterCost = 6 + (6 * _pierCount);
-                        _woodCost = 8 + (8 * _pierCount);
+                        _foodCost = 15 + (15 * _pierCount);
+                        _waterCost = 20 + (20 * _pierCount);
+                        _woodCost = 25 + (25 * _pierCount);
                         _costText = format ["<t size='0.9'>Cost:<br/>%1x Food<br/>%2x Water<br/>%3x Wood</t>", _foodCost, _waterCost, _woodCost];
                     };
 
                     if (_factoryType == "Powerplant") then {
                         _powerCount = {_x == "Powerplant"} count CRATE_FACTORY_TYPES;
-                        _coalCost = 6 + (6 * _powerCount);
-                        _metalCost = 5 + (5 * _powerCount);
-                        _woodCost = 4 + (4 * _powerCount);
+                        _coalCost = 20 + (20 * _powerCount);
+                        _metalCost = 25 + (25 * _powerCount);
+                        _woodCost = 15 + (15 * _powerCount);
                         _costText = format ["<t size='0.9'>Cost:<br/>%1x Coal<br/>%2x Metal<br/>%3x Wood</t>", _coalCost, _metalCost, _woodCost];
                     };
 
                     if (_factoryType == "Vehicle") then {
                         _vehicleCount = {_x == "Vehicle"} count CRATE_FACTORY_TYPES;
-                        _energyCost = 8 + (8 * _vehicleCount);
-                        _metalCost = 10 + (10 * _vehicleCount);
-                        _woodCost = 6 + (6 * _vehicleCount);
+                        _energyCost = 30 + (30 * _vehicleCount);
+                        _metalCost = 40 + (40 * _vehicleCount);
+                        _woodCost = 20 + (20 * _vehicleCount);
                         _costText = format ["<t size='0.9'>Cost:<br/>%1x Energy<br/>%2x Metal<br/>%3x Wood</t>", _energyCost, _metalCost, _woodCost];
                     };
 
