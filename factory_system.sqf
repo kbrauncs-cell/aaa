@@ -1,4 +1,39 @@
 // Factory Manager - v6 FIXED - Task Tracking + Hover Info + Morale System
+
+// Initialize global variables
+if (isNil "CRATE_FACTORY_POSITIONS") then {CRATE_FACTORY_POSITIONS = []};
+if (isNil "CRATE_FACTORY_COUNTS") then {CRATE_FACTORY_COUNTS = []};
+if (isNil "CRATE_FACTORY_TIMERS") then {CRATE_FACTORY_TIMERS = []};
+if (isNil "CRATE_SPAWN_SCRIPTS") then {CRATE_SPAWN_SCRIPTS = []};
+if (isNil "CRATE_FACTORY_TYPES") then {CRATE_FACTORY_TYPES = []};
+if (isNil "CRATE_PENDING_LOCATION") then {CRATE_PENDING_LOCATION = []};
+if (isNil "CRATE_FACTORY_INTERVALS") then {CRATE_FACTORY_INTERVALS = []};
+if (isNil "CRATE_FACTORY_CRATETYPES") then {CRATE_FACTORY_CRATETYPES = []};
+if (isNil "CRATE_FACTORY_MAXCRATES") then {CRATE_FACTORY_MAXCRATES = []};
+if (isNil "CRATE_FACTORY_SUPPLIES") then {CRATE_FACTORY_SUPPLIES = []};
+if (isNil "CRATE_FACTORY_SPAWNEDCRATES") then {CRATE_FACTORY_SPAWNEDCRATES = []};
+if (isNil "CRATE_FACTORY_FOOD") then {CRATE_FACTORY_FOOD = []};
+if (isNil "CRATE_FACTORY_WATER") then {CRATE_FACTORY_WATER = []};
+if (isNil "CRATE_FACTORY_ELECTRICITY") then {CRATE_FACTORY_ELECTRICITY = []};
+if (isNil "CRATE_FACTORY_METAL") then {CRATE_FACTORY_METAL = []};
+if (isNil "CRATE_FACTORY_WOOD") then {CRATE_FACTORY_WOOD = []};
+if (isNil "CRATE_FACTORY_COAL") then {CRATE_FACTORY_COAL = []};
+if (isNil "CRATE_SELECTED_FACTORY") then {CRATE_SELECTED_FACTORY = -1};
+if (isNil "CRATE_FACTORY_FIRES") then {CRATE_FACTORY_FIRES = []};
+if (isNil "CRATE_FACTORY_MORALE") then {CRATE_FACTORY_MORALE = []};
+if (isNil "CRATE_FACTORY_TASK_PENDING") then {CRATE_FACTORY_TASK_PENDING = []};
+if (isNil "CRATE_FACTORY_TASK_TYPE") then {CRATE_FACTORY_TASK_TYPE = []};
+if (isNil "CRATE_FACTORY_TASK_ID") then {CRATE_FACTORY_TASK_ID = []};
+if (isNil "CRATE_FACTORY_TASK_TIMER") then {CRATE_FACTORY_TASK_TIMER = []};
+if (isNil "CRATE_FACTORY_TASK_MIN_TIME") then {CRATE_FACTORY_TASK_MIN_TIME = []};
+if (isNil "CRATE_FACTORY_TASK_MAX_TIME") then {CRATE_FACTORY_TASK_MAX_TIME = []};
+if (isNil "CRATE_FACTORY_OPFOR_SPAWNED") then {CRATE_FACTORY_OPFOR_SPAWNED = []};
+if (isNil "CRATE_MOUSE_POS") then {CRATE_MOUSE_POS = []};
+if (isNil "CRATE_FACTORY_LEVEL") then {CRATE_FACTORY_LEVEL = []};
+if (isNil "FOOD_WATER_CRATES") then {FOOD_WATER_CRATES = []};
+if (isNil "DROPPED_ITEMS_GLOBAL") then {DROPPED_ITEMS_GLOBAL = []};
+if (isNil "PLAYER_CARRYING_ITEM") then {PLAYER_CARRYING_ITEM = objNull};
+
 player addAction ["Open Crate Spawner", {
     createDialog "RscDisplayEmpty";
     _display = findDisplay -1;
@@ -19,38 +54,6 @@ player addAction ["Open Crate Spawner", {
     _map ctrlSetPosition [0.0, 0.07, 0.65, 0.86];
     _map ctrlCommit 0;
 
-    if (isNil "CRATE_FACTORY_POSITIONS") then {CRATE_FACTORY_POSITIONS = []};
-    if (isNil "CRATE_FACTORY_COUNTS") then {CRATE_FACTORY_COUNTS = []};
-    if (isNil "CRATE_FACTORY_TIMERS") then {CRATE_FACTORY_TIMERS = []};
-    if (isNil "CRATE_SPAWN_SCRIPTS") then {CRATE_SPAWN_SCRIPTS = []};
-    if (isNil "CRATE_FACTORY_TYPES") then {CRATE_FACTORY_TYPES = []};
-    if (isNil "CRATE_PENDING_LOCATION") then {CRATE_PENDING_LOCATION = []};
-    if (isNil "CRATE_FACTORY_INTERVALS") then {CRATE_FACTORY_INTERVALS = []};
-    if (isNil "CRATE_FACTORY_CRATETYPES") then {CRATE_FACTORY_CRATETYPES = []};
-    if (isNil "CRATE_FACTORY_MAXCRATES") then {CRATE_FACTORY_MAXCRATES = []};
-    if (isNil "CRATE_FACTORY_SUPPLIES") then {CRATE_FACTORY_SUPPLIES = []};
-    if (isNil "CRATE_FACTORY_SPAWNEDCRATES") then {CRATE_FACTORY_SPAWNEDCRATES = []};
-    if (isNil "CRATE_FACTORY_FOOD") then {CRATE_FACTORY_FOOD = []};
-    if (isNil "CRATE_FACTORY_WATER") then {CRATE_FACTORY_WATER = []};
-    if (isNil "CRATE_FACTORY_ELECTRICITY") then {CRATE_FACTORY_ELECTRICITY = []};
-    if (isNil "CRATE_FACTORY_METAL") then {CRATE_FACTORY_METAL = []};
-    if (isNil "CRATE_FACTORY_WOOD") then {CRATE_FACTORY_WOOD = []};
-    if (isNil "CRATE_FACTORY_COAL") then {CRATE_FACTORY_COAL = []};
-    if (isNil "CRATE_SELECTED_FACTORY") then {CRATE_SELECTED_FACTORY = -1};
-    if (isNil "CRATE_FACTORY_FIRES") then {CRATE_FACTORY_FIRES = []};
-    if (isNil "CRATE_FACTORY_MORALE") then {CRATE_FACTORY_MORALE = []};
-    if (isNil "CRATE_FACTORY_TASK_PENDING") then {CRATE_FACTORY_TASK_PENDING = []};
-    if (isNil "CRATE_FACTORY_TASK_TYPE") then {CRATE_FACTORY_TASK_TYPE = []};
-    if (isNil "CRATE_FACTORY_TASK_ID") then {CRATE_FACTORY_TASK_ID = []};
-    if (isNil "CRATE_FACTORY_TASK_TIMER") then {CRATE_FACTORY_TASK_TIMER = []};
-    if (isNil "CRATE_FACTORY_TASK_MIN_TIME") then {CRATE_FACTORY_TASK_MIN_TIME = []};
-    if (isNil "CRATE_FACTORY_TASK_MAX_TIME") then {CRATE_FACTORY_TASK_MAX_TIME = []};
-    if (isNil "CRATE_FACTORY_OPFOR_SPAWNED") then {CRATE_FACTORY_OPFOR_SPAWNED = []};
-    if (isNil "CRATE_MOUSE_POS") then {CRATE_MOUSE_POS = []};
-    if (isNil "CRATE_FACTORY_LEVEL") then {CRATE_FACTORY_LEVEL = []};
-    if (isNil "FOOD_WATER_CRATES") then {FOOD_WATER_CRATES = []};
-    if (isNil "DROPPED_ITEMS_GLOBAL") then {DROPPED_ITEMS_GLOBAL = []};
-    if (isNil "PLAYER_CARRYING_ITEM") then {PLAYER_CARRYING_ITEM = objNull};
 
     _map ctrlAddEventHandler ["MouseMoving", {
         params ["_control", "_xPos", "_yPos"];
