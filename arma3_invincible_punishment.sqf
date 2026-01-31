@@ -66,19 +66,20 @@ PUNISH_EH_ID = player addEventHandler ["HandleDamage", {
     if (_region != "unknown") then {
 
         // === ANY HIT: Remove one support item (map, compass, watch, radio, GPS) ===
-        private _supportItems = [
-            ["ItemMap", {player unassignItem "ItemMap"; player removeItem "ItemMap";}],
-            ["ItemCompass", {player unassignItem "ItemCompass"; player removeItem "ItemCompass";}],
-            ["ItemWatch", {player unassignItem "ItemWatch"; player removeItem "ItemWatch";}],
-            ["ItemRadio", {player unassignItem "ItemRadio"; player removeItem "ItemRadio";}],
-            ["ItemGPS", {player unassignItem "ItemGPS"; player removeItem "ItemGPS";}]
-        ];
+        private _assignedItems = assignedItems player;
+        private _availableSupport = [];
 
-        private _availableSupport = _supportItems select {(player hasItem (_x select 0)) || ((_x select 0) in (assignedItems player))};
+        if ("ItemMap" in _assignedItems) then { _availableSupport pushBack "ItemMap"; };
+        if ("ItemCompass" in _assignedItems) then { _availableSupport pushBack "ItemCompass"; };
+        if ("ItemWatch" in _assignedItems) then { _availableSupport pushBack "ItemWatch"; };
+        if ("ItemRadio" in _assignedItems) then { _availableSupport pushBack "ItemRadio"; };
+        if ("ItemGPS" in _assignedItems) then { _availableSupport pushBack "ItemGPS"; };
+
         if (count _availableSupport > 0) then {
             private _toRemove = selectRandom _availableSupport;
-            call (_toRemove select 1);
-            systemChat format ["[PUNISHMENT] Lost support item: %1", _toRemove select 0];
+            player unassignItem _toRemove;
+            player removeItem _toRemove;
+            systemChat format ["[PUNISHMENT] Lost support item: %1", _toRemove];
         };
 
         // === HEAD HIT: Remove head gear item ===
