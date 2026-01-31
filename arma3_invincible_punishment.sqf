@@ -3,7 +3,7 @@
 // Execute in debug console (Local Exec)
 
 // Cleanup
-if !(isNil "PUNISH_DMG_EH") then { player removeEventHandler ["HandleDamage", PUNISH_DMG_EH]; };
+if !(isNil "PUNISH_HIT_EH") then { player removeEventHandler ["HitPart", PUNISH_HIT_EH]; };
 
 // Remove support item
 PUNISH_fnc_removeSupport = {
@@ -86,23 +86,20 @@ PUNISH_fnc_drainStamina = {
     systemChat "[LEG] Stamina drained!";
 };
 
-// Detect hits and apply punishment - DOES NOT CHANGE DAMAGE
-PUNISH_DMG_EH = player addEventHandler ["HandleDamage", {
-    params ["_unit", "_selection", "_damage", "_source", "_projectile", "_hitIndex", "_instigator", "_hitPoint"];
+// HitPart works even with allowDamage false (Zeus invincibility)
+PUNISH_HIT_EH = player addEventHandler ["HitPart", {
+    params ["_target", "_shooter", "_projectile", "_position", "_velocity", "_selection", "_ammo", "_vector", "_radius", "_surfaceType", "_isDirect"];
 
-    // Only trigger on real damage attempts
-    if (_damage < 0.01) exitWith {};
-
-    // Get body region
+    // Get body region from selection array
     private _region = "chest";
-    private _sel = "";
-    if (_selection isEqualType "") then { _sel = toLower _selection; };
-
-    if (_sel find "head" > -1) then { _region = "head"; };
-    if (_sel find "face" > -1) then { _region = "head"; };
-    if (_sel find "arm" > -1) then { _region = "arms"; };
-    if (_sel find "hand" > -1) then { _region = "arms"; };
-    if (_sel find "leg" > -1) then { _region = "legs"; };
+    if (count _selection > 0) then {
+        private _sel = toLower (_selection select 0);
+        if (_sel find "head" > -1) then { _region = "head"; };
+        if (_sel find "face" > -1) then { _region = "head"; };
+        if (_sel find "arm" > -1) then { _region = "arms"; };
+        if (_sel find "hand" > -1) then { _region = "arms"; };
+        if (_sel find "leg" > -1) then { _region = "legs"; };
+    };
 
     // Apply punishments
     call PUNISH_fnc_removeSupport;
@@ -110,10 +107,8 @@ PUNISH_DMG_EH = player addEventHandler ["HandleDamage", {
     if (_region == "chest") then { call PUNISH_fnc_removeChest; };
     if (_region == "arms") then { call PUNISH_fnc_removeWeapon; };
     if (_region == "legs") then { call PUNISH_fnc_drainStamina; };
-
-    // Return nothing - let other handlers control damage
 }];
 
-systemChat "=== PUNISHMENT SYSTEM ACTIVE ===";
-systemChat "Head=gear | Chest=vest/pack | Arm=weapon | Leg=stamina";
-hint "Punishment Only!\nUse your own invincibility\nItems removed on hit";
+systemChat "=== PUNISHMENT SYSTEM ACTIVE (HitPart) ===";
+systemChat "Works with Zeus invincibility";
+hint "Punishment Active!\nWorks with Zeus godmode";
