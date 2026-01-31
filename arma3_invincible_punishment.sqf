@@ -1,233 +1,205 @@
-// Arma 3 Debug Console Script - Invincible with Body Part Punishment System
-// Player cannot die but taking damage has consequences based on hit location
-// Execute this in the debug console (local exec)
+// Arma 3 Debug Console Script - Invincible with Body Part Punishment
+// Execute in debug console (Local Exec)
 
-// Remove any existing handler first
-if (!isNil "PUNISH_EH_ID") then {
-    player removeEventHandler ["HandleDamage", PUNISH_EH_ID];
+// Cleanup old handlers
+if !(isNil "PUNISH_EH_ID") then { player removeEventHandler ["HandleDamage", PUNISH_EH_ID]; };
+if !(isNil "PUNISH_KILLED_EH") then { player removeEventHandler ["Killed", PUNISH_KILLED_EH]; };
+if !(isNil "PUNISH_LOOP") then { terminate PUNISH_LOOP; };
+
+// Remove support item function
+PUNISH_fnc_removeSupport = {
+    private _assigned = assignedItems player;
+    private _available = [];
+    if ("ItemMap" in _assigned) then { _available pushBack "ItemMap"; };
+    if ("ItemCompass" in _assigned) then { _available pushBack "ItemCompass"; };
+    if ("ItemWatch" in _assigned) then { _available pushBack "ItemWatch"; };
+    if ("ItemRadio" in _assigned) then { _available pushBack "ItemRadio"; };
+    if ("ItemGPS" in _assigned) then { _available pushBack "ItemGPS"; };
+    if (count _available > 0) then {
+        private _item = selectRandom _available;
+        player unassignItem _item;
+        player removeItem _item;
+        systemChat format ["[HIT] Lost support: %1", _item];
+    };
 };
 
-// Track player's current damage for visual feedback (but never die)
-player setVariable ["PUNISH_totalDamage", 0];
-
-// Helper function to remove random item from array of equipped items
-PUNISH_removeRandomFrom = {
-    params ["_items"];
-    private _equipped = _items select {_x != ""};
-    if (count _equipped > 0) then {
-        private _toRemove = selectRandom _equipped;
-        _toRemove;
+// Remove head item function
+PUNISH_fnc_removeHead = {
+    private _available = [];
+    if ((headgear player) != "") then { _available pushBack "headgear"; };
+    if ((goggles player) != "") then { _available pushBack "goggles"; };
+    if ((hmd player) != "") then { _available pushBack "nvg"; };
+    if (count _available > 0) then {
+        private _type = selectRandom _available;
+        if (_type == "headgear") then {
+            private _n = headgear player;
+            removeHeadgear player;
+            systemChat format ["[HEAD] Lost: %1", _n];
+        };
+        if (_type == "goggles") then {
+            private _n = goggles player;
+            removeGoggles player;
+            systemChat format ["[HEAD] Lost: %1", _n];
+        };
+        if (_type == "nvg") then {
+            private _n = hmd player;
+            player unlinkItem _n;
+            systemChat format ["[HEAD] Lost: %1", _n];
+        };
     } else {
-        "";
+        systemChat "[HEAD] No head items left!";
     };
+};
+
+// Remove chest item function
+PUNISH_fnc_removeChest = {
+    private _available = [];
+    if ((vest player) != "") then { _available pushBack "vest"; };
+    if ((backpack player) != "") then { _available pushBack "backpack"; };
+    if (count _available > 0) then {
+        private _type = selectRandom _available;
+        if (_type == "vest") then {
+            private _n = vest player;
+            removeVest player;
+            systemChat format ["[CHEST] Lost: %1", _n];
+        };
+        if (_type == "backpack") then {
+            private _n = backpack player;
+            removeBackpack player;
+            systemChat format ["[CHEST] Lost: %1", _n];
+        };
+    } else {
+        systemChat "[CHEST] No vest/backpack left!";
+    };
+};
+
+// Remove weapon function
+PUNISH_fnc_removeWeapon = {
+    private _available = [];
+    if ((primaryWeapon player) != "") then { _available pushBack "primary"; };
+    if ((secondaryWeapon player) != "") then { _available pushBack "secondary"; };
+    if ((handgunWeapon player) != "") then { _available pushBack "handgun"; };
+    if (count _available > 0) then {
+        private _type = selectRandom _available;
+        if (_type == "primary") then {
+            private _n = primaryWeapon player;
+            player removeWeapon _n;
+            systemChat format ["[ARM] Lost: %1", _n];
+        };
+        if (_type == "secondary") then {
+            private _n = secondaryWeapon player;
+            player removeWeapon _n;
+            systemChat format ["[ARM] Lost: %1", _n];
+        };
+        if (_type == "handgun") then {
+            private _n = handgunWeapon player;
+            player removeWeapon _n;
+            systemChat format ["[ARM] Lost: %1", _n];
+        };
+    } else {
+        systemChat "[ARM] No weapons left!";
+    };
+};
+
+// Drain stamina function
+PUNISH_fnc_drainStamina = {
+    player setFatigue 1;
+    if !(isNil "ace_advanced_fatigue_anReserve") then {
+        player setVariable ["ace_advanced_fatigue_anReserve", 0];
+        player setVariable ["ace_advanced_fatigue_aeReserve", 0];
+    };
+    systemChat "[LEG] Stamina drained!";
+};
+
+// Get body region function
+PUNISH_fnc_getRegion = {
+    params ["_sel", "_hit"];
+    private _s = toLower _sel;
+    private _h = toLower _hit;
+    private _region = "none";
+
+    private _headCheck1 = _s find "head";
+    private _headCheck2 = _h find "head";
+    private _headCheck3 = _s find "face";
+    private _headCheck4 = _h find "face";
+    if (_headCheck1 > -1) then { _region = "head"; };
+    if (_headCheck2 > -1) then { _region = "head"; };
+    if (_headCheck3 > -1) then { _region = "head"; };
+    if (_headCheck4 > -1) then { _region = "head"; };
+
+    private _chestCheck1 = _s find "spine";
+    private _chestCheck2 = _h find "spine";
+    private _chestCheck3 = _s find "chest";
+    private _chestCheck4 = _h find "chest";
+    private _chestCheck5 = _s find "body";
+    private _chestCheck6 = _h find "body";
+    private _chestCheck7 = _s find "pelvis";
+    private _chestCheck8 = _h find "pelvis";
+    if (_chestCheck1 > -1) then { _region = "chest"; };
+    if (_chestCheck2 > -1) then { _region = "chest"; };
+    if (_chestCheck3 > -1) then { _region = "chest"; };
+    if (_chestCheck4 > -1) then { _region = "chest"; };
+    if (_chestCheck5 > -1) then { _region = "chest"; };
+    if (_chestCheck6 > -1) then { _region = "chest"; };
+    if (_chestCheck7 > -1) then { _region = "chest"; };
+    if (_chestCheck8 > -1) then { _region = "chest"; };
+
+    private _armCheck1 = _s find "arm";
+    private _armCheck2 = _h find "arm";
+    private _armCheck3 = _s find "hand";
+    private _armCheck4 = _h find "hand";
+    if (_armCheck1 > -1) then { _region = "arms"; };
+    if (_armCheck2 > -1) then { _region = "arms"; };
+    if (_armCheck3 > -1) then { _region = "arms"; };
+    if (_armCheck4 > -1) then { _region = "arms"; };
+
+    private _legCheck1 = _s find "leg";
+    private _legCheck2 = _h find "leg";
+    if (_legCheck1 > -1) then { _region = "legs"; };
+    if (_legCheck2 > -1) then { _region = "legs"; };
+
+    _region
 };
 
 // Main damage handler
 PUNISH_EH_ID = player addEventHandler ["HandleDamage", {
     params ["_unit", "_selection", "_damage", "_source", "_projectile", "_hitIndex", "_instigator", "_hitPoint"];
 
-    // Only process if actual damage is being dealt
     if (_damage <= 0) exitWith { 0 };
 
-    // Determine body region from selection/hitPoint
-    private _region = "unknown";
-    private _hitLower = toLower _hitPoint;
-    private _selLower = toLower _selection;
+    private _region = [_selection, _hitPoint] call PUNISH_fnc_getRegion;
 
-    // Head detection
-    if (_hitLower find "head" >= 0 || _selLower find "head" >= 0 || _hitLower find "face" >= 0) then {
-        _region = "head";
+    if (_region == "none") then {
+        if (_damage > 0.1) then { _region = "chest"; };
     };
 
-    // Chest/Body detection
-    if (_hitLower find "body" >= 0 || _hitLower find "chest" >= 0 || _hitLower find "spine" >= 0 ||
-        _selLower find "body" >= 0 || _selLower find "chest" >= 0 || _selLower find "spine" >= 0 ||
-        _hitLower find "pelvis" >= 0) then {
-        _region = "chest";
+    if (_region != "none") then {
+        call PUNISH_fnc_removeSupport;
+        if (_region == "head") then { call PUNISH_fnc_removeHead; };
+        if (_region == "chest") then { call PUNISH_fnc_removeChest; };
+        if (_region == "arms") then { call PUNISH_fnc_removeWeapon; };
+        if (_region == "legs") then { call PUNISH_fnc_drainStamina; };
     };
 
-    // Arms detection
-    if (_hitLower find "arm" >= 0 || _hitLower find "hand" >= 0 ||
-        _selLower find "arm" >= 0 || _selLower find "hand" >= 0) then {
-        _region = "arms";
-    };
-
-    // Legs detection
-    if (_hitLower find "leg" >= 0 || _selLower find "leg" >= 0) then {
-        _region = "legs";
-    };
-
-    // If still unknown but damage dealt, default to chest
-    if (_region == "unknown" && _damage > 0.1) then {
-        _region = "chest";
-    };
-
-    // Process punishment based on region
-    if (_region != "unknown") then {
-
-        // === ANY HIT: Remove one support item (map, compass, watch, radio, GPS) ===
-        private _assignedItems = assignedItems player;
-        private _availableSupport = [];
-
-        if ("ItemMap" in _assignedItems) then { _availableSupport pushBack "ItemMap"; };
-        if ("ItemCompass" in _assignedItems) then { _availableSupport pushBack "ItemCompass"; };
-        if ("ItemWatch" in _assignedItems) then { _availableSupport pushBack "ItemWatch"; };
-        if ("ItemRadio" in _assignedItems) then { _availableSupport pushBack "ItemRadio"; };
-        if ("ItemGPS" in _assignedItems) then { _availableSupport pushBack "ItemGPS"; };
-
-        if (count _availableSupport > 0) then {
-            private _toRemove = selectRandom _availableSupport;
-            player unassignItem _toRemove;
-            player removeItem _toRemove;
-            systemChat format ["[PUNISHMENT] Lost support item: %1", _toRemove];
-        };
-
-        // === HEAD HIT: Remove head gear item ===
-        if (_region == "head") then {
-            private _headItems = [];
-            if (headgear player != "") then { _headItems pushBack "headgear"; };
-            if (goggles player != "") then { _headItems pushBack "goggles"; };
-            // Check for NVG
-            if ((hmd player) != "") then { _headItems pushBack "nvg"; };
-
-            if (count _headItems > 0) then {
-                private _removeType = selectRandom _headItems;
-                switch (_removeType) do {
-                    case "headgear": {
-                        private _item = headgear player;
-                        removeHeadgear player;
-                        systemChat format ["[PUNISHMENT] Head hit! Lost headgear: %1", _item];
-                    };
-                    case "goggles": {
-                        private _item = goggles player;
-                        removeGoggles player;
-                        systemChat format ["[PUNISHMENT] Head hit! Lost goggles: %1", _item];
-                    };
-                    case "nvg": {
-                        private _item = hmd player;
-                        player unlinkItem _item;
-                        systemChat format ["[PUNISHMENT] Head hit! Lost NVG: %1", _item];
-                    };
-                };
-            } else {
-                systemChat "[PUNISHMENT] Head hit! No head items left to lose.";
-            };
-        };
-
-        // === CHEST HIT: Remove vest or backpack ===
-        if (_region == "chest") then {
-            private _chestItems = [];
-            if (vest player != "") then { _chestItems pushBack "vest"; };
-            if (backpack player != "") then { _chestItems pushBack "backpack"; };
-
-            if (count _chestItems > 0) then {
-                private _removeType = selectRandom _chestItems;
-                switch (_removeType) do {
-                    case "vest": {
-                        private _item = vest player;
-                        removeVest player;
-                        systemChat format ["[PUNISHMENT] Chest hit! Lost vest: %1", _item];
-                    };
-                    case "backpack": {
-                        private _item = backpack player;
-                        removeBackpack player;
-                        systemChat format ["[PUNISHMENT] Chest hit! Lost backpack: %1", _item];
-                    };
-                };
-            } else {
-                systemChat "[PUNISHMENT] Chest hit! No vest/backpack left to lose.";
-            };
-        };
-
-        // === ARMS HIT: Remove one weapon ===
-        if (_region == "arms") then {
-            private _weapons = [];
-            if (primaryWeapon player != "") then { _weapons pushBack "primary"; };
-            if (secondaryWeapon player != "") then { _weapons pushBack "secondary"; };
-            if (handgunWeapon player != "") then { _weapons pushBack "handgun"; };
-
-            if (count _weapons > 0) then {
-                private _removeType = selectRandom _weapons;
-                switch (_removeType) do {
-                    case "primary": {
-                        private _item = primaryWeapon player;
-                        player removeWeapon _item;
-                        systemChat format ["[PUNISHMENT] Arm hit! Lost primary weapon: %1", _item];
-                    };
-                    case "secondary": {
-                        private _item = secondaryWeapon player;
-                        player removeWeapon _item;
-                        systemChat format ["[PUNISHMENT] Arm hit! Lost launcher: %1", _item];
-                    };
-                    case "handgun": {
-                        private _item = handgunWeapon player;
-                        player removeWeapon _item;
-                        systemChat format ["[PUNISHMENT] Arm hit! Lost handgun: %1", _item];
-                    };
-                };
-            } else {
-                systemChat "[PUNISHMENT] Arm hit! No weapons left to lose.";
-            };
-        };
-
-        // === LEGS HIT: Drain ACE stamina ===
-        if (_region == "legs") then {
-            // ACE3 stamina drain
-            if (!isNil "ace_advanced_fatigue_anReserve") then {
-                player setVariable ["ace_advanced_fatigue_anReserve", 0];
-                player setVariable ["ace_advanced_fatigue_aeReserve", 0];
-            };
-            // Fallback for basic ACE or vanilla - force fatigue
-            player setFatigue 1;
-
-            systemChat "[PUNISHMENT] Leg hit! Stamina depleted!";
-        };
-    };
-
-    // Allow damage for visual/sound feedback but prevent death
-    // Return minimal damage to show hit effects but keep player alive
-    private _currentDamage = damage _unit;
-
-    // Cap damage at 0.9 to prevent death
-    if (_currentDamage + _damage >= 1) then {
-        0.05  // Return tiny damage to show hit feedback
-    } else {
-        _damage * 0.3  // Reduce incoming damage significantly
-    };
+    private _currentDmg = damage _unit;
+    if ((_currentDmg + _damage) >= 1) exitWith { 0.05 };
+    _damage * 0.3
 }];
 
-// Safety net: prevent death via another handler
-if (!isNil "PUNISH_KILLED_EH") then {
-    player removeEventHandler ["Killed", PUNISH_KILLED_EH];
-};
-
+// Backup death prevention
 PUNISH_KILLED_EH = player addEventHandler ["Killed", {
     params ["_unit"];
     _unit setDamage 0;
-    _unit setVariable ["PUNISH_totalDamage", 0];
 }];
 
-// Continuous safety check to prevent death
-if (!isNil "PUNISH_LOOP") then {
-    terminate PUNISH_LOOP;
-};
-
+// Safety loop to prevent death
 PUNISH_LOOP = [] spawn {
-    while {alive player} do {
-        if (damage player > 0.85) then {
-            player setDamage 0.5;
-        };
+    while {true} do {
+        if ((damage player) > 0.85) then { player setDamage 0.5; };
         sleep 0.1;
     };
 };
 
-// Confirmation message
-systemChat "========================================";
-systemChat "[SYSTEM] Invincibility + Punishment System ACTIVE";
-systemChat "- Head hit: Lose headgear/goggles/NVG";
-systemChat "- Chest hit: Lose vest or backpack";
-systemChat "- Arm hit: Lose a weapon";
-systemChat "- Leg hit: Stamina drained to 0";
-systemChat "- Any hit: Lose a support item";
-systemChat "========================================";
-hint "Punishment System Active!\n\nYou cannot die, but damage has consequences!";
+systemChat "=== PUNISHMENT SYSTEM ACTIVE ===";
+systemChat "Head=gear | Chest=vest/pack | Arm=weapon | Leg=stamina";
+hint "Punishment System Active!";
