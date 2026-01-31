@@ -5,8 +5,11 @@
 // Cleanup old handlers
 if !(isNil "PUNISH_DMG_EH") then { player removeEventHandler ["HandleDamage", PUNISH_DMG_EH]; };
 
-// Armor level (0.05 = 95% damage reduction, like level 5 armor)
-PUNISH_ARMOR_MULT = 0.05;
+// Block all damage - punishment IS the consequence
+PUNISH_ARMOR_MULT = 0;
+
+// Disable ACE medical damage processing
+player setVariable ["ace_medical_allowDamage", false, true];
 
 // Remove support item
 PUNISH_fnc_removeSupport = {
@@ -112,6 +115,6 @@ PUNISH_DMG_EH = player addEventHandler ["HandleDamage", {
     _damage * PUNISH_ARMOR_MULT
 }];
 
-systemChat "=== LEVEL 5 ARMOR + PUNISHMENT ACTIVE ===";
-systemChat format ["Damage reduction: %1%2", (1 - PUNISH_ARMOR_MULT) * 100, "%"];
-hint "Level 5 Armor Active!\n95% damage reduction\nPunishment on hit";
+systemChat "=== ARMOR + PUNISHMENT ACTIVE ===";
+systemChat "Full damage block - punishment is consequence";
+hint "Armor Active!\nNo health damage\nLose items when hit";
