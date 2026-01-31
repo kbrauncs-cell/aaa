@@ -1,6 +1,6 @@
 // Marker Spawn Script for Arma 3 Debug Console
 // TAB = green marker (permanent)
-// TAB + TAB within 1 second = blue marker (deletes at midnight)
+// TAB + TAB within 1 second = blue marker (reverts to green at midnight)
 // TAB near green marker (3m) = turns it blue, reverts to green at midnight
 // All blue markers are processed at 00:00 game time (FPS friendly single loop)
 
@@ -21,8 +21,7 @@ if (isNil "MARKER_COUNT") then {
 if (isNil "GREEN_MARKERS") then {
     GREEN_MARKERS = [];
 };
-BLUE_MARKERS_DELETE = [];
-BLUE_MARKERS_REVERT = [];
+BLUE_MARKERS = [];
 LAST_TAB_PRESS = -10;
 
 // Single midnight check loop (FPS friendly)
@@ -35,20 +34,14 @@ MIDNIGHT_LOOP_RUNNING = true;
 
         // Detect midnight crossing (hour went from 23.x to 0.x)
         if (_lastHour > 23 && _currentHour < 1) then {
-            // Delete temporary blue markers
-            {
-                deleteMarker _x;
-            } forEach BLUE_MARKERS_DELETE;
-            BLUE_MARKERS_DELETE = [];
-
-            // Revert toggled markers back to green
+            // Revert all blue markers to green
             {
                 if (getMarkerType _x != "") then {
                     _x setMarkerColor "ColorGreen";
                     GREEN_MARKERS pushBack _x;
                 };
-            } forEach BLUE_MARKERS_REVERT;
-            BLUE_MARKERS_REVERT = [];
+            } forEach BLUE_MARKERS;
+            BLUE_MARKERS = [];
         };
 
         _lastHour = _currentHour;
@@ -79,7 +72,7 @@ TAB_MarkerHandler = (findDisplay 46) displayAddEventHandler ["KeyDown", {
             // Found nearby green marker - turn it blue temporarily
             _nearbyMarker setMarkerColor "ColorBlue";
             GREEN_MARKERS = GREEN_MARKERS - [_nearbyMarker];
-            BLUE_MARKERS_REVERT pushBack _nearbyMarker;
+            BLUE_MARKERS pushBack _nearbyMarker;
             LAST_TAB_PRESS = -10;
         } else {
             // No nearby marker - create new one
@@ -90,9 +83,9 @@ TAB_MarkerHandler = (findDisplay 46) displayAddEventHandler ["KeyDown", {
             _marker setMarkerType "hd_dot";
 
             if (_timeSinceLastPress <= 1) then {
-                // Double tap - blue marker for deletion at midnight
+                // Double tap - blue marker, reverts to green at midnight
                 _marker setMarkerColor "ColorBlue";
-                BLUE_MARKERS_DELETE pushBack _markerName;
+                BLUE_MARKERS pushBack _markerName;
                 LAST_TAB_PRESS = -10;
             } else {
                 // Single tap - green permanent marker
