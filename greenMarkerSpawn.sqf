@@ -1,11 +1,17 @@
 // Marker Spawn Script for Arma 3 Debug Console
 // TAB = green marker (permanent)
-// TAB + TAB within 1 second = blue marker (deletes after 10 seconds)
-// TAB near green marker (3m) = turns it blue, reverts to green after 10 seconds
+// TAB + TAB within 1 second = blue marker (deletes at midnight)
+// TAB near green marker (3m) = turns it blue, reverts to green at midnight
+// All blue markers are processed at 00:00 game time (FPS friendly single loop)
 
 // Remove existing handler if re-running script
 if (!isNil "TAB_MarkerHandler") then {
     (findDisplay 46) displayRemoveEventHandler ["KeyDown", TAB_MarkerHandler];
+};
+
+// Stop existing midnight loop
+if (!isNil "MIDNIGHT_LOOP_RUNNING") then {
+    MIDNIGHT_LOOP_RUNNING = false;
 };
 
 // Initialize variables
@@ -15,7 +21,40 @@ if (isNil "MARKER_COUNT") then {
 if (isNil "GREEN_MARKERS") then {
     GREEN_MARKERS = [];
 };
+BLUE_MARKERS_DELETE = [];
+BLUE_MARKERS_REVERT = [];
 LAST_TAB_PRESS = -10;
+
+// Single midnight check loop (FPS friendly)
+MIDNIGHT_LOOP_RUNNING = true;
+[] spawn {
+    private _lastHour = daytime;
+
+    while {MIDNIGHT_LOOP_RUNNING} do {
+        private _currentHour = daytime;
+
+        // Detect midnight crossing (hour went from 23.x to 0.x)
+        if (_lastHour > 23 && _currentHour < 1) then {
+            // Delete temporary blue markers
+            {
+                deleteMarker _x;
+            } forEach BLUE_MARKERS_DELETE;
+            BLUE_MARKERS_DELETE = [];
+
+            // Revert toggled markers back to green
+            {
+                if (getMarkerType _x != "") then {
+                    _x setMarkerColor "ColorGreen";
+                    GREEN_MARKERS pushBack _x;
+                };
+            } forEach BLUE_MARKERS_REVERT;
+            BLUE_MARKERS_REVERT = [];
+        };
+
+        _lastHour = _currentHour;
+        sleep 1;
+    };
+};
 
 // Add key event handler
 TAB_MarkerHandler = (findDisplay 46) displayAddEventHandler ["KeyDown", {
@@ -39,21 +78,8 @@ TAB_MarkerHandler = (findDisplay 46) displayAddEventHandler ["KeyDown", {
         if (_nearbyMarker != "") then {
             // Found nearby green marker - turn it blue temporarily
             _nearbyMarker setMarkerColor "ColorBlue";
-
-            // Remove from green list temporarily
             GREEN_MARKERS = GREEN_MARKERS - [_nearbyMarker];
-
-            // Revert to green after 10 seconds
-            [_nearbyMarker] spawn {
-                params ["_name"];
-                sleep 10;
-                if (getMarkerType _name != "") then {
-                    _name setMarkerColor "ColorGreen";
-                    GREEN_MARKERS pushBack _name;
-                };
-            };
-
-            // Reset timer
+            BLUE_MARKERS_REVERT pushBack _nearbyMarker;
             LAST_TAB_PRESS = -10;
         } else {
             // No nearby marker - create new one
@@ -64,15 +90,9 @@ TAB_MarkerHandler = (findDisplay 46) displayAddEventHandler ["KeyDown", {
             _marker setMarkerType "hd_dot";
 
             if (_timeSinceLastPress <= 1) then {
-                // Double tap - blue marker that auto-deletes
+                // Double tap - blue marker for deletion at midnight
                 _marker setMarkerColor "ColorBlue";
-
-                [_markerName] spawn {
-                    params ["_name"];
-                    sleep 10;
-                    deleteMarker _name;
-                };
-
+                BLUE_MARKERS_DELETE pushBack _markerName;
                 LAST_TAB_PRESS = -10;
             } else {
                 // Single tap - green permanent marker
