@@ -1,21 +1,22 @@
 // Arma 3 Debug Console Script - Invincible with Body Part Punishment
-// Compatible with ACE3 Medical
+// ACE3 Compatible - Bulletproof Version
 // Execute in debug console (Local Exec)
 
-// Cleanup old handlers
-if !(isNil "PUNISH_EH_ID") then { player removeEventHandler ["Hit", PUNISH_EH_ID]; };
+// Cleanup
+if !(isNil "PUNISH_HIT_EH") then { player removeEventHandler ["HitPart", PUNISH_HIT_EH]; };
+if !(isNil "PUNISH_DMG_EH") then { player removeEventHandler ["HandleDamage", PUNISH_DMG_EH]; };
 if !(isNil "PUNISH_KILLED_EH") then { player removeEventHandler ["Killed", PUNISH_KILLED_EH]; };
 if !(isNil "PUNISH_LOOP") then { terminate PUNISH_LOOP; };
 
-// Make player truly invincible (AI will still shoot at you)
-player allowDamage true;
+// TRUE INVINCIBILITY - Multiple layers
+player allowDamage false;
 
-// ACE3 medical immunity
-if !(isNil "ace_medical_enabled") then {
-    player setVariable ["ace_medical_allowDamage", false, true];
-};
+// ACE3 specific - disable all medical damage
+player setVariable ["ace_medical_allowDamage", false, true];
+player setVariable ["ACE_isUnconscious", false, true];
+player setVariable ["ace_medical_inCardiacArrest", false, true];
 
-// Remove support item function
+// Remove support item
 PUNISH_fnc_removeSupport = {
     private _assigned = assignedItems player;
     private _available = [];
@@ -28,11 +29,11 @@ PUNISH_fnc_removeSupport = {
         private _item = selectRandom _available;
         player unassignItem _item;
         player removeItem _item;
-        systemChat format ["[HIT] Lost support: %1", _item];
+        systemChat format ["[HIT] Lost: %1", _item];
     };
 };
 
-// Remove head item function
+// Remove head item
 PUNISH_fnc_removeHead = {
     private _available = [];
     if ((headgear player) != "") then { _available pushBack "headgear"; };
@@ -40,49 +41,25 @@ PUNISH_fnc_removeHead = {
     if ((hmd player) != "") then { _available pushBack "nvg"; };
     if (count _available > 0) then {
         private _type = selectRandom _available;
-        if (_type == "headgear") then {
-            private _n = headgear player;
-            removeHeadgear player;
-            systemChat format ["[HEAD] Lost: %1", _n];
-        };
-        if (_type == "goggles") then {
-            private _n = goggles player;
-            removeGoggles player;
-            systemChat format ["[HEAD] Lost: %1", _n];
-        };
-        if (_type == "nvg") then {
-            private _n = hmd player;
-            player unlinkItem _n;
-            systemChat format ["[HEAD] Lost: %1", _n];
-        };
-    } else {
-        systemChat "[HEAD] No head items left!";
+        if (_type == "headgear") then { private _n = headgear player; removeHeadgear player; systemChat format ["[HEAD] Lost: %1", _n]; };
+        if (_type == "goggles") then { private _n = goggles player; removeGoggles player; systemChat format ["[HEAD] Lost: %1", _n]; };
+        if (_type == "nvg") then { private _n = hmd player; player unlinkItem _n; systemChat format ["[HEAD] Lost: %1", _n]; };
     };
 };
 
-// Remove chest item function
+// Remove chest item
 PUNISH_fnc_removeChest = {
     private _available = [];
     if ((vest player) != "") then { _available pushBack "vest"; };
     if ((backpack player) != "") then { _available pushBack "backpack"; };
     if (count _available > 0) then {
         private _type = selectRandom _available;
-        if (_type == "vest") then {
-            private _n = vest player;
-            removeVest player;
-            systemChat format ["[CHEST] Lost: %1", _n];
-        };
-        if (_type == "backpack") then {
-            private _n = backpack player;
-            removeBackpack player;
-            systemChat format ["[CHEST] Lost: %1", _n];
-        };
-    } else {
-        systemChat "[CHEST] No vest/backpack left!";
+        if (_type == "vest") then { private _n = vest player; removeVest player; systemChat format ["[CHEST] Lost: %1", _n]; };
+        if (_type == "backpack") then { private _n = backpack player; removeBackpack player; systemChat format ["[CHEST] Lost: %1", _n]; };
     };
 };
 
-// Remove weapon function
+// Remove weapon
 PUNISH_fnc_removeWeapon = {
     private _available = [];
     if ((primaryWeapon player) != "") then { _available pushBack "primary"; };
@@ -90,27 +67,13 @@ PUNISH_fnc_removeWeapon = {
     if ((handgunWeapon player) != "") then { _available pushBack "handgun"; };
     if (count _available > 0) then {
         private _type = selectRandom _available;
-        if (_type == "primary") then {
-            private _n = primaryWeapon player;
-            player removeWeapon _n;
-            systemChat format ["[ARM] Lost: %1", _n];
-        };
-        if (_type == "secondary") then {
-            private _n = secondaryWeapon player;
-            player removeWeapon _n;
-            systemChat format ["[ARM] Lost: %1", _n];
-        };
-        if (_type == "handgun") then {
-            private _n = handgunWeapon player;
-            player removeWeapon _n;
-            systemChat format ["[ARM] Lost: %1", _n];
-        };
-    } else {
-        systemChat "[ARM] No weapons left!";
+        if (_type == "primary") then { private _n = primaryWeapon player; player removeWeapon _n; systemChat format ["[ARM] Lost: %1", _n]; };
+        if (_type == "secondary") then { private _n = secondaryWeapon player; player removeWeapon _n; systemChat format ["[ARM] Lost: %1", _n]; };
+        if (_type == "handgun") then { private _n = handgunWeapon player; player removeWeapon _n; systemChat format ["[ARM] Lost: %1", _n]; };
     };
 };
 
-// Drain stamina function
+// Drain stamina
 PUNISH_fnc_drainStamina = {
     player setFatigue 1;
     if !(isNil "ace_advanced_fatigue_anReserve") then {
@@ -120,101 +83,81 @@ PUNISH_fnc_drainStamina = {
     systemChat "[LEG] Stamina drained!";
 };
 
-// Get body region from hit selection
-PUNISH_fnc_getRegion = {
-    params ["_sel"];
-    private _s = toLower _sel;
+// Temporarily enable damage to detect hit, then disable again
+PUNISH_fnc_processHit = {
+    params ["_part"];
     private _region = "chest";
+    private _p = toLower _part;
 
-    if ((_s find "head") > -1) then { _region = "head"; };
-    if ((_s find "face") > -1) then { _region = "head"; };
-    if ((_s find "arm") > -1) then { _region = "arms"; };
-    if ((_s find "hand") > -1) then { _region = "arms"; };
-    if ((_s find "leg") > -1) then { _region = "legs"; };
+    if ((_p find "head") > -1) then { _region = "head"; };
+    if ((_p find "face") > -1) then { _region = "head"; };
+    if ((_p find "arm") > -1) then { _region = "arms"; };
+    if ((_p find "hand") > -1) then { _region = "arms"; };
+    if ((_p find "leg") > -1) then { _region = "legs"; };
 
-    _region
-};
-
-// Use Hit event handler (fires when hit but doesn't block damage)
-PUNISH_EH_ID = player addEventHandler ["Hit", {
-    params ["_unit", "_source", "_damage", "_instigator"];
-
-    // Get hit selection from the damage
-    private _region = "chest";
-
-    // Apply punishment
     call PUNISH_fnc_removeSupport;
-
     if (_region == "head") then { call PUNISH_fnc_removeHead; };
     if (_region == "chest") then { call PUNISH_fnc_removeChest; };
     if (_region == "arms") then { call PUNISH_fnc_removeWeapon; };
     if (_region == "legs") then { call PUNISH_fnc_drainStamina; };
+};
 
-    // Heal player immediately
-    player setDamage 0;
+// Use HitPart for body part detection (works even with allowDamage false)
+PUNISH_HIT_EH = player addEventHandler ["HitPart", {
+    params ["_target", "_shooter", "_projectile", "_position", "_velocity", "_selection", "_ammo", "_vector", "_radius", "_surfaceType", "_isDirect"];
 
-    // ACE3: Reset medical state
-    if !(isNil "ace_medical_enabled") then {
-        [player] call ace_medical_treatment_fnc_fullHealLocal;
+    if (count _selection > 0) then {
+        private _part = _selection select 0;
+        [_part] call PUNISH_fnc_processHit;
+    } else {
+        ["body"] call PUNISH_fnc_processHit;
     };
 }];
 
-// Alternative: Use HandleDamage to detect body part but don't block damage weirdly
-if !(isNil "PUNISH_DMG_EH") then { player removeEventHandler ["HandleDamage", PUNISH_DMG_EH]; };
-
+// Backup HandleDamage - return 0 always
 PUNISH_DMG_EH = player addEventHandler ["HandleDamage", {
-    params ["_unit", "_selection", "_damage", "_source", "_projectile", "_hitIndex", "_instigator", "_hitPoint"];
-
-    if (_damage > 0.01) then {
-        private _region = [_selection] call PUNISH_fnc_getRegion;
-
-        // Store last hit region for punishment
-        player setVariable ["PUNISH_lastRegion", _region];
-
-        // Apply region-specific punishment
-        call PUNISH_fnc_removeSupport;
-
-        if (_region == "head") then { call PUNISH_fnc_removeHead; };
-        if (_region == "chest") then { call PUNISH_fnc_removeChest; };
-        if (_region == "arms") then { call PUNISH_fnc_removeWeapon; };
-        if (_region == "legs") then { call PUNISH_fnc_drainStamina; };
-    };
-
-    // Return 0 to take no damage
+    params ["_unit", "_selection", "_damage"];
     0
 }];
 
-// Backup: Prevent death and heal
+// Respawn if somehow killed
 PUNISH_KILLED_EH = player addEventHandler ["Killed", {
     params ["_unit"];
     _unit setDamage 0;
-    if !(isNil "ace_medical_enabled") then {
-        [_unit] call ace_medical_treatment_fnc_fullHealLocal;
-    };
+    _unit allowDamage false;
+    _unit setVariable ["ace_medical_allowDamage", false, true];
 }];
 
-// Safety loop - keep player alive and healed
+// Aggressive safety loop
 PUNISH_LOOP = [] spawn {
     while {true} do {
-        if ((damage player) > 0.5) then {
-            player setDamage 0;
-        };
-        // ACE3: Keep alive
-        if !(isNil "ace_medical_enabled") then {
-            if (player getVariable ["ace_medical_inCardiacArrest", false]) then {
-                player setVariable ["ace_medical_inCardiacArrest", false, true];
-            };
-            if ((player getVariable ["ace_medical_bloodVolume", 6]) < 5) then {
-                player setVariable ["ace_medical_bloodVolume", 6, true];
-            };
-        };
-        sleep 0.1;
+        // Keep invincibility on
+        player allowDamage false;
+        player setDamage 0;
+
+        // ACE3 reset all medical
+        player setVariable ["ace_medical_allowDamage", false, true];
+        player setVariable ["ACE_isUnconscious", false, true];
+        player setVariable ["ace_medical_inCardiacArrest", false, true];
+        player setVariable ["ace_medical_bloodVolume", 6, true];
+        player setVariable ["ace_medical_pain", 0, true];
+        player setVariable ["ace_medical_painSuppress", 0, true];
+        player setVariable ["ace_medical_heartRate", 80, true];
+        player setVariable ["ace_medical_bloodPressure", [120, 80], true];
+        player setVariable ["ace_medical_woundBleeding", 0, true];
+
+        // Clear wounds
+        player setVariable ["ace_medical_openWounds", [], true];
+        player setVariable ["ace_medical_bandagedWounds", [], true];
+        player setVariable ["ace_medical_stitchedWounds", [], true];
+
+        sleep 0.05;
     };
 };
 
-// Force AI to still target player
+// Make sure AI targets player
 player setCaptive false;
 
-systemChat "=== PUNISHMENT SYSTEM ACTIVE (ACE Compatible) ===";
-systemChat "Head=gear | Chest=vest/pack | Arm=weapon | Leg=stamina";
-hint "Punishment System Active!\nACE3 Compatible - You cannot die!";
+systemChat "=== GODMODE + PUNISHMENT ACTIVE ===";
+systemChat "HitPart detection enabled";
+hint "GODMODE Active!\nPunishment system running.";
